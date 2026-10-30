@@ -223,6 +223,7 @@ def post_completion(run: Run, paths: list[str], text: str, *,
     # （2026-10-31、1通1個で18通を送り、3通目で止まった）。通の間を空ける
     gap = float(run.config.get("delivery.seconds_between_files", 4.0) or 0)
     first: dict | None = None
+    failed = False
     for index, chunk in enumerate(chunks):
         this_text = text if index == 0 else f"{head}（続き {index + 1}/{len(chunks)}）"
         if index and gap > 0 and run.clients.slack.__class__.__module__.endswith("real.slack"):
@@ -242,9 +243,12 @@ def post_completion(run: Run, paths: list[str], text: str, *,
                 impact="紙面が届きません",
                 default=None)
         if result is None:
-            return None
+            # 1通で止めずに残りも送る。送れた通は次の送り直しで履歴から見つかり、
+            # 二重にならない（2026-10-31、18通の3通目で止まり残りが届かなかった）
+            failed = True
+            continue
         first = first or result
-    return first
+    return None if failed else first
 
 
 def post_channel_notice(run: Run, text: str) -> dict | None:
