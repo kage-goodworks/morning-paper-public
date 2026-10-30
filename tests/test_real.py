@@ -360,9 +360,48 @@ def test_アップロードURLの取得はフォーム形式で送る(monkeypatc
 
     kinds = [(k, url.rsplit("/", 1)[-1]) for k, url, _ in calls]
     assert ("form", "files.getUploadURLExternal") in kinds
-    assert ("json", "files.completeUploadExternal") in kinds
+    # 完了もフォーム形式（JSON の本文に files を文字列で入れると file_not_found。2026-10-29〜）
+    assert ("form", "files.completeUploadExternal") in kinds
     form_fields = next(f for k, u, f in calls if k == "form")
     assert form_fields["filename"] == "p.png" and form_fields["length"] == str(png.stat().st_size)
+
+
+def test_完了がfile_not_foundなら形式を変えて1回だけ送り直す(monkeypatch, tmp_path):
+    from src.clients.real import http, slack
+
+    calls = []
+
+    def form(url, fields, **kw):
+        method = url.rsplit("/", 1)[-1]
+        calls.append(("form", method, fields))
+        if method == "files.getUploadURLExternal":
+            return {"ok": True, "upload_url": "https://up.test/x", "file_id": "F1"}
+        return {"ok": False, "error": "file_not_found"}
+
+    def as_json(url, payload, **kw):
+        calls.append(("json", url.rsplit("/", 1)[-1], payload))
+        return {"ok": True, "files": [{"id": "F1"}]}
+
+    monkeypatch.setattr(http, "post_form", form)
+    monkeypatch.setattr(http, "post_json", as_json)
+    monkeypatch.setattr(slack.RealSlackClient, "COMPLETE_RETRY_WAIT", 0)
+
+    class R:
+        status = 200
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self, n=-1): return b"OK - 8"
+    import urllib.request
+    monkeypatch.setattr(urllib.request, "urlopen", lambda req, timeout=0: R())
+    monkeypatch.setenv("SLACK_BOT_TOKEN", "xoxb-test")
+
+    png = tmp_path / "p.png"; png.write_bytes(b"\x89PNG....")
+    client = slack.RealSlackClient(channel="C1")
+    client.upload_image("1.2", str(png), "紙面")
+
+    done = [(k, f) for k, m, f in calls if m == "files.completeUploadExternal"]
+    assert [k for k, _ in done] == ["form", "json"]
+    assert done[1][1]["files"] == [{"id": "F1"}]   # 2回目は配列のまま
 
 
 def test_permalinkの取得はフォーム形式で送る(monkeypatch):

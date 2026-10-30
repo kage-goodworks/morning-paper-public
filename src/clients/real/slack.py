@@ -226,7 +226,7 @@ class RealSlackClient:
             payload["initial_comment"] = text
         if thread_ts:
             payload["thread_ts"] = thread_ts
-        result = self._call("files.completeUploadExternal", payload)
+        result = self._complete_upload(payload, entries)
 
         files = result.get("files") or [{}]
         file_permalink = str(files[0].get("permalink") or "")
@@ -250,6 +250,26 @@ class RealSlackClient:
                 "file_ids": [e["id"] for e in entries],
                 "permalink": (self._shared_message_permalink(first_id) if first_id else "")
                 or file_permalink}
+
+    #: file_not_found のとき、形式を変えて送り直すまでに待つ秒数
+    COMPLETE_RETRY_WAIT = 3.0
+
+    def _complete_upload(self, payload: dict, entries: list[dict]) -> dict:
+        """`files.completeUploadExternal` を呼ぶ。
+
+        **フォーム形式で送る**（`files` は JSON 文字列。公式の書き方）。JSON の本文に
+        `files` を文字列で入れて送っていたところ、2026-10-29 から毎回 file_not_found に
+        なり、10/29 の紙面が3日届かなかった（アップロード自体は OK を返していた）。
+        それでも file_not_found なら、少し待って `files` を配列にした JSON で1回だけ送り直す。
+        """
+        try:
+            return self._call("files.completeUploadExternal", payload, form=True)
+        except SlackError as exc:
+            if "file_not_found" not in str(exc):
+                raise
+        import time as _time
+        _time.sleep(self.COMPLETE_RETRY_WAIT)
+        return self._call("files.completeUploadExternal", {**payload, "files": entries})
 
     def _shared_message_permalink(self, file_id: str) -> str:
         try:
