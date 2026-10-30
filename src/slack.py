@@ -219,9 +219,15 @@ def post_completion(run: Run, paths: list[str], text: str, *,
                       or FILES_PER_MESSAGE))
     chunks = [paths[i:i + per] for i in range(0, len(paths), per)] or [list(paths)]
     head = continued or ("📎 " + (text.splitlines()[0] if text else "").lstrip("✅ "))
+    # ファイル付きの投稿を間を空けずに続けると、Slack が黙って共有しないことがある
+    # （2026-10-31、1通1個で18通を送り、3通目で止まった）。通の間を空ける
+    gap = float(run.config.get("delivery.seconds_between_files", 4.0) or 0)
     first: dict | None = None
     for index, chunk in enumerate(chunks):
         this_text = text if index == 0 else f"{head}（続き {index + 1}/{len(chunks)}）"
+        if index and gap > 0 and run.clients.slack.__class__.__module__.endswith("real.slack"):
+            import time as _time
+            _time.sleep(gap)
         existing = already_posted(run, this_text, channel)
         if existing:
             run.note_status("Slack: 同じ完了通知がすでに投稿されていたため送り直していません")

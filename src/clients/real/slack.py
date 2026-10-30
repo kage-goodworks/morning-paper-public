@@ -165,8 +165,9 @@ class RealSlackClient:
         """1ファイルをスレッドへ。`upload_files` の薄い包み。"""
         return self.upload_files([path], "", thread_ts=thread_ts)
 
-    #: 共有の確認で待つ秒数（合計 約18秒）。共有は非同期で、すぐには現れない
-    SHARE_WAITS = (2.0, 3.0, 5.0, 8.0)
+    #: 共有の確認で待つ秒数（合計 約45秒）。共有は非同期で、すぐには現れない。
+    #: 18秒では、続けて送った3通目が現れないうちに失敗にしていた（2026-10-31）
+    SHARE_WAITS = (2.0, 3.0, 5.0, 8.0, 12.0, 15.0)
 
     def _confirm_shared(self, text: str, channel: str) -> dict | None:
         """ファイル付きの投稿がチャンネルに現れたかを履歴で確かめる。
