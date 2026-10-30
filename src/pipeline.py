@@ -34,8 +34,15 @@ def log_reason(reason: str, *, public: bool | None = None) -> str:
     """
     if not (PUBLIC_LOG if public is None else public):
         return reason
-    head = re.split(r"[:：（(]", reason, maxsplit=1)[0].strip()
-    return head[:60] or "（理由は Slack のスレッドを参照）"
+    parts = re.split(r"[:：（(]", reason, maxsplit=1)
+    head = parts[0].strip()[:60]
+    # 見出しだけだと原因が分からない（2026-10-31、Slack の送信失敗が4回とも
+    # 「Slack files.completeUploadExternal」としか出なかった）。続きが API の
+    # エラーコード（英小文字と _ だけ。個人の情報を含まない）なら添える
+    code = re.match(r"\s*([a-z][a-z0-9_]{2,40})\b", parts[1]) if len(parts) > 1 else None
+    if head and code:
+        return f"{head}: {code.group(1)}"
+    return head or "（理由は Slack のスレッドを参照）"
 
 
 def _public_excepthook(exc_type, exc, tb) -> None:

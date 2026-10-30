@@ -258,6 +258,10 @@ def test_公開ログでは失敗理由から中身を落とす():
     assert log_reason(reason, public=False) == reason
     assert log_reason(reason, public=True) == "claude -p の出力がJSONではない"
     assert "個人" not in log_reason("出力形式が不正（個人開発者）", public=True)
+    # API のエラーコードは残す（原因が分かるように）。日本語の中身は落とす
+    assert log_reason("Slack files.completeUploadExternal: not_in_channel",
+                      public=True) == "Slack files.completeUploadExternal: not_in_channel"
+    assert log_reason("Slack chat.postMessage: 記事の題名", public=True) == "Slack chat.postMessage"
 
 
 def test_本人の像は非公開データのファイルから読む(tmp_path):

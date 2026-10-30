@@ -238,8 +238,8 @@ class RealSlackClient:
             shared = self._confirm_shared(text, target)
             if shared is None:
                 raise SlackError(
-                    "Slack files.completeUploadExternal: ファイルは上がったが"
-                    "チャンネルに投稿が現れない（bot が未参加か、共有に失敗）")
+                    "Slack files.completeUploadExternal: not_shared（ファイルは上がったが"
+                    "チャンネルに投稿が現れない。bot が未参加か、共有に失敗）")
             return {"ok": True, "ts": shared["ts"], "file_id": first_id,
                     "file_ids": [e["id"] for e in entries], "channel": target,
                     "permalink": shared["permalink"] or file_permalink}
