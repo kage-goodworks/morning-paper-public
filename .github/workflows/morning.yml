@@ -63,7 +63,10 @@ jobs:
     needs: gate
     if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15     # NFR-6
+    # 普段は10分前後。止まった日の翌朝は2日分（600件超）を処理して15分を超え、一覧を
+    # 出した直後に打ち切られて記録が残らなかった（2026-10-31）。公開リポジトリで時間は
+    # 無料なので余裕を取る
+    timeout-minutes: 45
     steps:
       # サードパーティActionはcommit SHAで固定する（NFR-3）
       - name: リポジトリの取得
@@ -118,12 +121,17 @@ jobs:
           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
           VAULT_DEPLOY_KEY: ${{ secrets.VAULT_DEPLOY_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # ジョブ全体（45分）より先に切り、後の「状態のcommit」の時間を残す
+        timeout-minutes: 40
         run: python -m src.main
 
       - name: 状態のcommit
         # 自分が書いた state を origin/main の最新へ JSON として併合してから push
         # する（scripts/push_state.sh）。rebase だと written.json の末尾追記どうしで
         # 必ず競合し、記録が消える（2026-10-01 に発生）。
+        # 途中で打ち切られても記録する。一覧を出したのに記録が無いと、見張りの起動で
+        # 同じ一覧をもう一度出しにいく（2026-10-31）
+        if: always()
         run: |
           cd private && ../scripts/push_state.sh "auto: state $(date +%F)" state/*.json discovered_sources.yml
 

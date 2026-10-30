@@ -29,7 +29,7 @@ env:
 jobs:
   weekly:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - name: リポジトリの取得
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -88,6 +88,7 @@ jobs:
         run: python -m src.weekly
 
       - name: 状態のcommit
+        if: always()
         # 自分が書いた state を origin/main の最新へ JSON として併合してから push
         # する（scripts/push_state.sh）。rebase だと written.json の末尾追記どうしで
         # 必ず競合し、記録が消える（2026-10-01 に発生）。
