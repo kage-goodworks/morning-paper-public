@@ -303,6 +303,14 @@ def enqueue_redo(state: State, story_ids: list[str], *, list_date: str,
 REDELIVER_DIR = "redeliver"
 
 
+def stuck_text(delivery: dict, stuck: list[int], total: int) -> str:
+    """一部の通が Slack に受け付けられなかったときの知らせ。純粋関数。"""
+    head = str(delivery.get("text") or "").splitlines()[0].lstrip("✅ ").strip() if delivery.get("text") else "紙面"
+    nums = "・".join(f"{n}通目" for n in stuck)
+    return (f":warning: {head} の紙面{total}通のうち {nums} は、何度送っても Slack に"
+            "受け付けられませんでした（内容が Slack の検査で止められた可能性）。残りは届いています。")
+
+
 def redeliver(run: Run, state: State, item: dict) -> list[str]:
     """前の実行で作ったのに送れなかった紙面を、書き直さずに送り直す。
 
@@ -321,10 +329,24 @@ def redeliver(run: Run, state: State, item: dict) -> list[str]:
         if not paths or not all(p.exists() for p in paths):
             run.note_status("やり直し: 前の紙面が見つからないため作り直します")
             continue
+        report: dict = {}
         posted = slack_io.post_completion(
             run, [str(p) for p in paths], str(delivery.get("text") or ""),
             channel=str(delivery.get("channel") or "") or None,
-            continued=str(delivery.get("continued") or ""))
+            continued=str(delivery.get("continued") or ""),
+            report=report)
+        stuck = report.get("failed") or []
+        if posted is None and report.get("first") and stuck:
+            # 一部の通だけが何度送っても共有されない（内容が Slack の検査で止められる
+            # など。2026-10-31、脆弱性の記事を含む1通だけが18通中で止まり続けた）。
+            # 同じ通で3回止まったら、届いた分を作成済みにし、止まった通だけを知らせる
+            if stuck == delivery.get("stuck") and int(delivery.get("stuck_count") or 0) >= 2:
+                posted = report["first"]
+                slack_io.post_channel_notice(run, stuck_text(delivery, stuck, report.get("total", 0)))
+            else:
+                delivery["stuck_count"] = (int(delivery.get("stuck_count") or 0) + 1
+                                           if stuck == delivery.get("stuck") else 1)
+                delivery["stuck"] = stuck
         if posted is None:
             keep.append(delivery)
             continue

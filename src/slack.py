@@ -199,7 +199,8 @@ FILES_PER_MESSAGE = 10
 
 def post_completion(run: Run, paths: list[str], text: str, *,
                     channel: str | None = None,
-                    continued: str = "") -> dict | None:
+                    continued: str = "",
+                    report: dict | None = None) -> dict | None:
     """記事化の完了通知。紙面PDFを添えて送る。
 
     一覧のスレッドには入れない。スレッドを開くたびに長い一覧を
@@ -246,8 +247,13 @@ def post_completion(run: Run, paths: list[str], text: str, *,
             # 1通で止めずに残りも送る。送れた通は次の送り直しで履歴から見つかり、
             # 二重にならない（2026-10-31、18通の3通目で止まり残りが届かなかった）
             failed = True
+            if report is not None:
+                report.setdefault("failed", []).append(index + 1)
             continue
         first = first or result
+    if report is not None:
+        report["total"] = len(chunks)
+        report["first"] = first
     return None if failed else first
 
 

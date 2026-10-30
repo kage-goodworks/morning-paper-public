@@ -179,6 +179,37 @@ def test_送れなかった紙面は書き直さずに送り直す(tmp_path, mon
     assert all(state.written[s]["permalink"] for s in listed)
 
 
+def test_同じ1通だけが3回続けて送れなければ_届いた分を作成済みにして知らせる(tmp_path, monkeypatch):
+    """脆弱性の記事を含む1通だけが Slack に共有されず、87件が延々やり直しに残った（2026-10-31）。"""
+    import shutil
+    state, result, listed = _morning(tmp_path)
+    monkeypatch.setenv("GITHUB_RUN_ID", "12345")
+    articles_mod.run_articles(_run(tmp_path, fail="slack"), state, story_ids=listed,
+                              message_ts=result["message_ts"])
+    files = state.redo[0]["deliveries"][0]["files"]
+    dest = tmp_path / "redeliver" / "12345"
+    dest.mkdir(parents=True)
+    for name in files:
+        shutil.copy(tmp_path / "paper" / name, dest / name)
+
+    def partly(run, paths, text, *, channel=None, continued="", report=None):
+        report.update({"failed": [3], "total": 18,
+                       "first": {"ok": True, "ts": "1.1", "permalink": "https://x/p"}})
+        return None
+
+    notices = []
+    monkeypatch.setattr(articles_mod.slack_io, "post_completion", partly)
+    monkeypatch.setattr(articles_mod.slack_io, "post_channel_notice",
+                        lambda run, text: notices.append(text))
+    for _ in range(2):
+        articles_mod.process_redo(_run(tmp_path), state)
+        assert state.redo and not any(state.is_written(s) for s in listed)
+    out = articles_mod.process_redo(_run(tmp_path), state)
+    assert set(out["written"]) == set(listed)
+    assert state.redo == []
+    assert any("3通目" in n and "18通" in n for n in notices)
+
+
 def test_前の紙面が無ければ作り直しに任せる(tmp_path, monkeypatch):
     state, result, listed = _morning(tmp_path)
     monkeypatch.setenv("GITHUB_RUN_ID", "999")
