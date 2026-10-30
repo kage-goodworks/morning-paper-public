@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "title": "公式ブログ 新機能の告知",
+      "url": "https://example.invalid/discovered/a",
+      "category": "ai"
+    },
+    {
+      "title": "GitHub Releases 新バージョン",
+      "url": "https://example.invalid/discovered/b",
+      "category": "lang"
+    },
+    {
+      "title": "arXiv 論文の公開",
+      "url": "https://example.invalid/discovered/c",
+      "category": "ai"
+    }
+  ]
+}

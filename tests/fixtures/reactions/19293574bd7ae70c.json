@@ -1,0 +1,44 @@
+{
+  "hn": {
+    "hits": [
+      {
+        "points": 72,
+        "num_comments": 18
+      }
+    ]
+  },
+  "hatena": 32,
+  "reddit": {
+    "data": {
+      "children": [
+        {
+          "data": {
+            "score": 112
+          }
+        }
+      ]
+    }
+  },
+  "after": {
+    "hn": {
+      "hits": [
+        {
+          "points": 140,
+          "num_comments": 42
+        }
+      ]
+    },
+    "hatena": 74,
+    "reddit": {
+      "data": {
+        "children": [
+          {
+            "data": {
+              "score": 186
+            }
+          }
+        ]
+      }
+    }
+  }
+}

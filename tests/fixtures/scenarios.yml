@@ -1,0 +1,34 @@
+# 3日間の状態変化を表すシナリオ定義。
+# mock クライアントはこの定義を見て、日ごとに返すフィクスチャを切り替える。
+
+normal:
+  description: 通常系。3日分を順に流す
+  days: [1, 2, 3]
+  feeds: {1: day1, 2: day2, 3: day3}
+
+empty:
+  description: 収集0件。探索（FR-2）の段階1から順に走る
+  days: [1]
+  feeds: {1: empty}
+
+partial_outage:
+  description: 部分障害。株価と執筆モデルが3回とも失敗する
+  days: [1]
+  feeds: {1: day1}
+  fail: "stooq,claude"
+
+carryover:
+  description: 繰り越し。1日目の ai が18本で上限12件を超え、6件が翌日へ残る
+  days: [1, 2]
+  feeds: {1: day1, 2: day2}
+
+merge:
+  description: 既存話題への統合。2日目の続報が1日目の繰り越し話題へ入る
+  days: [1, 2]
+  feeds: {1: day1, 2: day2}
+
+written_excluded:
+  description: 記事化済みの除外。2日目に記事化した話題が3日目に再処理されない
+  days: [1, 2, 3]
+  feeds: {1: day1, 2: day2, 3: day3}
+  click_on_day: 2

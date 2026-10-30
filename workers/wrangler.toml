@@ -1,0 +1,30 @@
+# Cloudflare Workers の設定。
+#
+#   npx wrangler deploy
+#
+# 秘密は wrangler.toml に書かない。次の2つはコマンドで登録する。
+#
+#   npx wrangler secret put SLACK_SIGNING_SECRET
+#   npx wrangler secret put GH_DISPATCH_TOKEN
+#
+# GH_DISPATCH_TOKEN は repo スコープだけを持つトークンにする。
+# デプロイ後に出るURLを Slack アプリの Interactivity の Request URL に設定する。
+
+name = "morning-paper"
+main = "index.js"
+compatibility_date = "2026-01-01"
+
+[vars]
+# 記事化を起動するリポジトリ。秘密ではないのでここに書いてよい。
+GH_REPO = "kage-goodworks/morning-paper-public"
+
+[observability]
+enabled = true
+
+# 朝の処理の時計。UTC で書く。19:40 UTC = 04:40 Asia/Tokyo。
+# GitHub Actions の schedule は数時間遅れることがあるため、こちらを主にする。
+[triggers]
+# Cloudflare の無料枠は Cron 5本まで（2026-10-30 に6本で弾かれた）。時刻をまとめる。
+# 19:40 UTC = 4:40 朝の処理 / 21・22・0時 UTC = 6:00・7:00・9:00 朝の見張り /
+# 3・11時 UTC = 12:00・20:00 記事化の自動やり直し（いずれも Asia/Tokyo）
+crons = ["40 19 * * *", "0 21,22,0 * * *", "0 3,11 * * *"]

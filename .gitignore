@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# 秘密情報 — .env は絶対にコミットしない（キー名だけを .env.example に置く）
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+deploy_key*
+
+# 実行成果物
+out/
+
+# 非公開データ（公開化 2026-10-31）。Actions が morning-paper-data を private/ に取り、
+# state/ と discovered_sources.yml はそこへのリンクになる。公開リポジトリには入れない
+private/
+state
+state/
+discovered_sources.yml
+docs/
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# wrangler の作業キャッシュ。端末ごとに作られる
+workers/.wrangler/

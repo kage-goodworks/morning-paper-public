@@ -1,0 +1,254 @@
+/* 1ページ1記事の雑誌レイアウト。A4縦 1240 x 1754 px。
+ *
+ * 文字の大きさはすべて em で書く。`.sheet` の font-size を Chromium 上で
+ * ページごとに調整し（render.capture_pdf）、内容が少なければ大きく、
+ * 多ければ小さくして余白を詰める。
+ *
+ * 白地は維持する。PDF の視認性と印刷のため。カテゴリごとの差し色は
+ * `--accent` で渡す。 */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+@page { size: 1240px 1754px; margin: 0; }
+
+a { color: inherit; text-decoration: none; }
+
+.sheet {
+  --accent: #1f4e79;
+  width: 1240px;
+  height: 1754px;
+  padding: 64px 72px 56px;
+  background: #ffffff;
+  color: #151515;
+  font-family: "Noto Sans JP", "Yu Gothic", "Hiragino Sans", Meiryo, sans-serif;
+  font-size: 18px;              /* 基準。ページごとに 14〜24px で調整される */
+  line-height: 1.7;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  page-break-after: always;
+}
+.sheet:last-child { page-break-after: auto; }
+
+/* --- 帯（カテゴリ・日付・ページ） -------------------------------------- */
+
+.band {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 0.18em solid var(--accent);
+  padding-bottom: 0.45em;
+  margin-bottom: 1.1em;
+  font-size: 0.85em;
+  color: #444444;
+  flex: 0 0 auto;
+}
+.band .category {
+  color: #ffffff;
+  background: var(--accent);
+  padding: 0.15em 0.8em;
+  border-radius: 0.2em;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.band .paper { font-family: "Noto Serif JP", "Yu Mincho", serif; font-weight: 700; letter-spacing: 0.2em; }
+
+/* --- 見出しまわり ------------------------------------------------------ */
+
+.lead {
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 1.05em;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.3em;
+}
+h1.headline {
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
+  font-size: 2.35em;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0 0 0.5em;
+  letter-spacing: 0.01em;
+}
+.hero {
+  margin: 0 0 1em;
+  flex: 0 0 auto;
+}
+.hero img {
+  display: block;
+  width: 100%;
+  max-height: 15em;
+  object-fit: cover;
+  border-radius: 0.3em;
+  background: #f2f2f2;
+}
+.hero figcaption {
+  font-size: 0.68em;
+  color: #8a8a8a;
+  text-align: right;
+  margin-top: 0.2em;
+}
+
+.timeline {
+  font-size: 0.8em;
+  color: #666666;
+  margin: -0.2em 0 0.9em;
+}
+
+/* --- 前回まで ---------------------------------------------------------- */
+
+.recap {
+  background: #f3f4f6;
+  border-left: 0.35em solid #9aa3ad;
+  padding: 0.8em 1.1em;
+  margin: 0 0 1.1em;
+  font-size: 0.92em;
+  line-height: 1.65;
+}
+.recap .label {
+  font-weight: 700;
+  color: #4b5563;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.3em;
+}
+.recap p { margin: 0 0 0.5em; }
+.recap p:last-child { margin-bottom: 0; }
+
+/* --- 要点 -------------------------------------------------------------- */
+
+.points {
+  border: 0.12em solid var(--accent);
+  border-radius: 0.35em;
+  padding: 0.75em 1.1em 0.75em 1.1em;
+  margin: 0 0 1.2em;
+}
+.points .label {
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  font-size: 0.85em;
+  margin-bottom: 0.25em;
+}
+.points ul { margin: 0; padding-left: 1.3em; }
+.points li { margin: 0.15em 0; font-weight: 500; }
+
+/* --- 本文 -------------------------------------------------------------- */
+
+.body {
+  flex: 0 0 auto;
+  font-size: 1em;
+  line-height: 1.85;
+  text-align: justify;
+}
+.body.two-columns {
+  column-count: 2;
+  column-gap: 2.2em;
+  column-rule: 1px solid #d9d9d9;
+}
+.body p { margin: 0 0 0.9em; }
+.body h2, .body h3, .body h4 {
+  font-size: 1.1em;
+  margin: 0.9em 0 0.4em;
+  color: var(--accent);
+  break-after: avoid;
+}
+.body table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.6em 0 1em;
+  font-size: 0.9em;
+  break-inside: avoid;
+}
+.body th, .body td {
+  border: 1px solid #cfcfcf;
+  padding: 0.35em 0.6em;
+  text-align: left;
+  vertical-align: top;
+}
+.body th { background: #f0f3f7; font-weight: 700; }
+
+/* --- 自分との関係 ------------------------------------------------------ */
+
+.why {
+  background: color-mix(in srgb, var(--accent) 8%, #ffffff);
+  border-radius: 0.35em;
+  padding: 0.8em 1.1em;
+  margin: 0.6em 0 0.9em;
+  flex: 0 0 auto;
+}
+.why .label {
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.12em;
+  font-size: 0.85em;
+  margin-bottom: 0.2em;
+}
+.why p { margin: 0 0 0.55em; line-height: 1.75; }
+.why p:last-child { margin-bottom: 0; }
+.why ul { margin: 0 0 0.55em; padding-left: 1.3em; }
+
+/* --- 用語・出典 -------------------------------------------------------- */
+
+.terms {
+  font-size: 0.82em;
+  color: #333333;
+  border-top: 1px dotted #b8b8b8;
+  padding-top: 0.6em;
+  margin-top: 0.2em;
+  flex: 0 0 auto;
+}
+.terms .label { font-weight: 700; color: #555555; margin-right: 0.6em; }
+.terms dl { margin: 0; display: flex; flex-wrap: wrap; gap: 0.2em 1.6em; }
+.terms dl > div { display: inline; }
+.terms dt { display: inline; font-weight: 700; }
+.terms dt::after { content: "："; }
+.terms dd { display: inline; margin: 0; }
+
+.sources {
+  font-size: 0.72em;
+  color: #6b6b6b;
+  margin-top: 0.6em;
+  flex: 0 0 auto;
+  word-break: break-all;
+}
+.sources .label { margin-right: 0.5em; }
+
+/* --- 写真集（個人投稿を数枚並べる） ---------------------------------- */
+
+.gallery-title { font-size: 1.9em; margin-bottom: 0.6em; }
+.gallery {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1em 1.2em;
+  flex: 0 0 auto;              /* 高さを自然に取らせ、文字サイズ調整に含める */
+  align-content: start;
+}
+.gallery .cell { margin: 0; }
+.gallery .photo {
+  height: 15em;
+  background: #f0f0f0;
+  border-radius: 0.35em;
+  overflow: hidden;
+}
+.gallery .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.gallery .photo img.missing { display: none; }
+.gallery .name { font-weight: 700; font-size: 0.95em; line-height: 1.4; margin-top: 0.4em; }
+.gallery .note { font-size: 0.85em; color: #444444; line-height: 1.5; margin-top: 0.15em; }
+.gallery .note::before { content: "▸ "; color: var(--accent); }
+
+.notice {
+  font-size: 0.8em;
+  color: #8a5a00;
+  background: #fff7e0;
+  padding: 0.4em 0.8em;
+  margin-bottom: 0.8em;
+  border-radius: 0.3em;
+}

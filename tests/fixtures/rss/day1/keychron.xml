@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>keychron</title>
+    <link>https://example.invalid/keychron</link>
+    <description>keychron feed</description>
+    <item>
+      <title>自作キーボードの新軸がレビューされる</title>
+      <link>https://example.invalid/keychron/1/42</link>
+      <pubDate>2026-09-01T13:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>自作キーボードの新軸がレビューされる。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

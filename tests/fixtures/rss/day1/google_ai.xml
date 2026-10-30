@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>google_ai</title>
+    <link>https://example.invalid/google_ai</link>
+    <description>google_ai feed</description>
+    <item>
+      <title>OpenAI GPT-5 の価格体系に開発者から異論</title>
+      <link>https://example.invalid/google_ai/1/1</link>
+      <pubDate>2026-09-01T08:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>Anthropic が MCP の仕様更新を発表</title>
+      <link>https://example.invalid/google_ai/1/5</link>
+      <pubDate>2026-09-01T12:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>Claude の推論コストが引き下げ</title>
+      <link>https://example.invalid/google_ai/1/9</link>
+      <pubDate>2026-09-01T16:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>長文脈モデルの検索精度に関する論文</title>
+      <link>https://example.invalid/google_ai/1/13</link>
+      <pubDate>2026-09-01T08:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>Anthropic がモデル蒸留の新手法を公開</title>
+      <link>https://example.invalid/google_ai/1/17</link>
+      <pubDate>2026-09-01T12:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>機械学習基盤の運用事例が公開</title>
+      <link>https://example.invalid/google_ai/1/21</link>
+      <pubDate>2026-09-01T16:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

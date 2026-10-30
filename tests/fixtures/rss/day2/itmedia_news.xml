@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>itmedia_news</title>
+    <link>https://example.invalid/itmedia_news</link>
+    <description>itmedia_news feed</description>
+    <item>
+      <title>クラウド市場の四半期シェアが公開</title>
+      <link>https://example.invalid/itmedia_news/2/10</link>
+      <pubDate>2026-09-02T17:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

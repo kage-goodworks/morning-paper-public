@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>vscode</title>
+    <link>https://example.invalid/vscode</link>
+    <description>vscode feed</description>
+    <item>
+      <title>Neovim 0.12 released</title>
+      <link>https://example.invalid/vscode/1/30</link>
+      <pubDate>2026-09-01T13:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

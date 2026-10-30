@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>rust_blog</title>
+    <link>https://example.invalid/rust_blog</link>
+    <description>rust_blog feed</description>
+    <item>
+      <title>Announcing Rust 1.90</title>
+      <link>https://example.invalid/rust_blog/1/24</link>
+      <pubDate>2026-09-01T07:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>Announcing Rust 1.90。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

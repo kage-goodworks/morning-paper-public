@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>ts_devblog</title>
+    <link>https://example.invalid/ts_devblog</link>
+    <description>ts_devblog feed</description>
+    <item>
+      <title>Rust 1.90 の非互換変更に関する補足</title>
+      <link>https://example.invalid/ts_devblog/2/7</link>
+      <pubDate>2026-09-02T14:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>Rust 1.90 の非互換変更に関する補足。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

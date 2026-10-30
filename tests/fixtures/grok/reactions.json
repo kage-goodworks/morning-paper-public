@@ -1,0 +1,13 @@
+{
+  "default": {
+    "summary": "性能より価格設定に議論が集まっている",
+    "citations": [
+      "https://x.invalid/post/1",
+      "https://x.invalid/post/2"
+    ]
+  },
+  "empty": {
+    "summary": "評価が分かれている",
+    "citations": []
+  }
+}

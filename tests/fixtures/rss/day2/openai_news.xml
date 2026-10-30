@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>openai_news</title>
+  <entry>
+    <title>OpenAI GPT-5 の提供地域が拡大 追加の価格改定も</title>
+    <link href="https://example.invalid/openai_news/2/0"/>
+    <published>2026-09-02T07:00:00+09:00</published>
+  </entry>
+  <entry>
+    <title>Claude Code の利用統計に関する分析</title>
+    <link href="https://example.invalid/openai_news/2/4"/>
+    <published>2026-09-02T11:00:00+09:00</published>
+  </entry>
+</feed>

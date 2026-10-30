@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>r_ergomechkb</title>
+    <link>https://example.invalid/r_ergomechkb</link>
+    <description>r_ergomechkb feed</description>
+    <item>
+      <title>キーキャップの新素材が登場</title>
+      <link>https://example.invalid/r_ergomechkb/1/43</link>
+      <pubDate>2026-09-01T14:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

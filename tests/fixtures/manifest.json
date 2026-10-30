@@ -1,0 +1,450 @@
+{
+  "e8dc6dd1874989cf": {
+    "url": "https://example.invalid/openai_news/1/0",
+    "title": "OpenAI が GPT-5 の一般提供を開始",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 1
+  },
+  "dc0ecb03e795cd36": {
+    "url": "https://example.invalid/google_ai/1/1",
+    "title": "OpenAI GPT-5 の価格体系に開発者から異論",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 1
+  },
+  "60a841a4ddc58842": {
+    "url": "https://example.invalid/itmedia_ai/1/2",
+    "title": "Anthropic が Claude の長文脈モードを拡張",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 1
+  },
+  "910f5de3c40c3750": {
+    "url": "https://example.invalid/hf_blog/1/3",
+    "title": "国内企業の生成AI導入率が42%に",
+    "category": "ai",
+    "source": "hf_blog",
+    "day": 1
+  },
+  "3cafdf41c4040eaf": {
+    "url": "https://example.invalid/openai_news/1/4",
+    "title": "OpenAI が推論モデルの評価手法を公開",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 1
+  },
+  "e14a70396a93ee0d": {
+    "url": "https://example.invalid/google_ai/1/5",
+    "title": "Anthropic が MCP の仕様更新を発表",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 1
+  },
+  "c1a1c17e9bc7af50": {
+    "url": "https://example.invalid/itmedia_ai/1/6",
+    "title": "画像生成スタートアップが資金調達を完了",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 1
+  },
+  "c0b4729553e8aad0": {
+    "url": "https://example.invalid/hf_blog/1/7",
+    "title": "AI エージェント向けの評価基盤が公開",
+    "category": "ai",
+    "source": "hf_blog",
+    "day": 1
+  },
+  "0c1d7f3a5a40bbce": {
+    "url": "https://example.invalid/openai_news/1/8",
+    "title": "OpenAI が音声モデルの遅延を半減",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 1
+  },
+  "828addb3291f1d80": {
+    "url": "https://example.invalid/google_ai/1/9",
+    "title": "Claude の推論コストが引き下げ",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 1
+  },
+  "72b5290328ff5a54": {
+    "url": "https://example.invalid/itmedia_ai/1/10",
+    "title": "オープンウェイトモデルの採用が拡大",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 1
+  },
+  "9705d45f3c3e252f": {
+    "url": "https://example.invalid/hf_blog/1/11",
+    "title": "AI 規制の国内ガイドラインが改訂",
+    "category": "ai",
+    "source": "hf_blog",
+    "day": 1
+  },
+  "50eb95382d98a0eb": {
+    "url": "https://example.invalid/openai_news/1/12",
+    "title": "OpenAI が開発者向けダッシュボードを刷新",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 1
+  },
+  "48d39159e90d27c5": {
+    "url": "https://example.invalid/google_ai/1/13",
+    "title": "長文脈モデルの検索精度に関する論文",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 1
+  },
+  "dcab9f0a0379ef72": {
+    "url": "https://example.invalid/itmedia_ai/1/14",
+    "title": "推論チップの新製品が発表",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 1
+  },
+  "493ad3b67f3f7b8b": {
+    "url": "https://example.invalid/hf_blog/1/15",
+    "title": "生成AIの社内利用ポリシー策定が進む",
+    "category": "ai",
+    "source": "hf_blog",
+    "day": 1
+  },
+  "19293574bd7ae70c": {
+    "url": "https://example.invalid/openai_news/1/16",
+    "title": "OpenAI が安全性評価の結果を公表",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 1
+  },
+  "a578b9a216405c09": {
+    "url": "https://example.invalid/google_ai/1/17",
+    "title": "Anthropic がモデル蒸留の新手法を公開",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 1
+  },
+  "33648a3a48a764ff": {
+    "url": "https://example.invalid/itmedia_ai/1/18",
+    "title": "OpenAI が長文脈の検索精度を改善",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 1
+  },
+  "c687e6c268b175ef": {
+    "url": "https://example.invalid/hf_blog/1/19",
+    "title": "Claude の日本語性能に関する検証",
+    "category": "ai",
+    "source": "hf_blog",
+    "day": 1
+  },
+  "bc5527be7e1b1b13": {
+    "url": "https://example.invalid/openai_news/1/20",
+    "title": "LLM の推論最適化ライブラリが公開",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 1
+  },
+  "d3c4008494dfc013": {
+    "url": "https://example.invalid/google_ai/1/21",
+    "title": "機械学習基盤の運用事例が公開",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 1
+  },
+  "a7c7c3f3166658d3": {
+    "url": "https://example.invalid/itmedia_ai/1/22",
+    "title": "OpenAI が埋め込みモデルを更新",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 1
+  },
+  "bf82cd055116f729": {
+    "url": "https://example.invalid/hf_blog/1/23",
+    "title": "Claude Code の利用統計が公開",
+    "category": "ai",
+    "source": "hf_blog",
+    "day": 1
+  },
+  "f168be04bd88d8c6": {
+    "url": "https://example.invalid/rust_blog/1/24",
+    "title": "Rust 1.90 リリース",
+    "category": "lang",
+    "source": "rust_blog",
+    "day": 1
+  },
+  "b5b393aa4b23a6fa": {
+    "url": "https://example.invalid/go_blog/1/25",
+    "title": "Python 3.14 の変更点まとめ",
+    "category": "lang",
+    "source": "go_blog",
+    "day": 1
+  },
+  "02fe35b2d5b9c759": {
+    "url": "https://example.invalid/python_insider/1/26",
+    "title": "Cargo のワークスペース機能が改善",
+    "category": "lang",
+    "source": "python_insider",
+    "day": 1
+  },
+  "9173382eb67090d6": {
+    "url": "https://example.invalid/ts_devblog/1/27",
+    "title": "TypeScript 6.0 のベータが公開",
+    "category": "lang",
+    "source": "ts_devblog",
+    "day": 1
+  },
+  "ff4fb9952d3940da": {
+    "url": "https://example.invalid/github_blog/1/28",
+    "title": "GitHub Actions のキャッシュが高速化",
+    "category": "devtools",
+    "source": "github_blog",
+    "day": 1
+  },
+  "5bb1016e37cc5e15": {
+    "url": "https://example.invalid/github_change/1/29",
+    "title": "VSCode の拡張機能APIが更新",
+    "category": "devtools",
+    "source": "github_change",
+    "day": 1
+  },
+  "7bf9906c5eb230b8": {
+    "url": "https://example.invalid/vscode/1/30",
+    "title": "Neovim 0.12 がリリース",
+    "category": "devtools",
+    "source": "vscode",
+    "day": 1
+  },
+  "a754530c4529160b": {
+    "url": "https://example.invalid/postgresql/1/31",
+    "title": "AWS が新しいコンテナランタイムを発表",
+    "category": "infra",
+    "source": "postgresql",
+    "day": 1
+  },
+  "aecc19ac1adbfa4b": {
+    "url": "https://example.invalid/aws_whatsnew/1/32",
+    "title": "PostgreSQL 18 の性能改善",
+    "category": "infra",
+    "source": "aws_whatsnew",
+    "day": 1
+  },
+  "2c1e97e86d2aa34a": {
+    "url": "https://example.invalid/cloudflare/1/33",
+    "title": "Kubernetes 1.34 の主な変更",
+    "category": "infra",
+    "source": "cloudflare",
+    "day": 1
+  },
+  "9e528049e0b3a82b": {
+    "url": "https://example.invalid/itmedia_news/1/34",
+    "title": "大手SIerがクラウド事業を分社化",
+    "category": "industry",
+    "source": "itmedia_news",
+    "day": 1
+  },
+  "06409262870fe07b": {
+    "url": "https://example.invalid/arstechnica/1/35",
+    "title": "国内スタートアップの資金調達額が回復",
+    "category": "industry",
+    "source": "arstechnica",
+    "day": 1
+  },
+  "987f53eb68d583be": {
+    "url": "https://example.invalid/publickey/1/36",
+    "title": "半導体大手が製造子会社を買収",
+    "category": "industry",
+    "source": "publickey",
+    "day": 1
+  },
+  "91eaf86253713301": {
+    "url": "https://example.invalid/krebs/1/37",
+    "title": "OpenSSL に深刻な脆弱性 CVE-2026-1234",
+    "category": "security",
+    "source": "krebs",
+    "day": 1
+  },
+  "bf172a7cc42af9c1": {
+    "url": "https://example.invalid/thehackernews/1/38",
+    "title": "ランサムウェア被害が製造業で増加",
+    "category": "security",
+    "source": "thehackernews",
+    "day": 1
+  },
+  "92625f8939f9e1af": {
+    "url": "https://example.invalid/jpcert/1/39",
+    "title": "多要素認証の回避手口が報告",
+    "category": "security",
+    "source": "jpcert",
+    "day": 1
+  },
+  "1b4185462a023e61": {
+    "url": "https://example.invalid/pc_watch/1/40",
+    "title": "ThinkPad の新モデルが発表",
+    "category": "gadget",
+    "source": "pc_watch",
+    "day": 1
+  },
+  "233df37084fcd687": {
+    "url": "https://example.invalid/theverge/1/41",
+    "title": "USB4 対応ドックの比較",
+    "category": "gadget",
+    "source": "theverge",
+    "day": 1
+  },
+  "d37b3db3f609c67c": {
+    "url": "https://example.invalid/keychron/1/42",
+    "title": "自作キーボードの新軸がレビューされる",
+    "category": "keyboard",
+    "source": "keychron",
+    "day": 1
+  },
+  "b88472ce4f6a6822": {
+    "url": "https://example.invalid/lofree/1/43",
+    "title": "キーキャップの新素材が登場",
+    "category": "keyboard",
+    "source": "lofree",
+    "day": 1
+  },
+  "413ddcbe28f6317d": {
+    "url": "https://example.invalid/stackoverflow/1/44",
+    "title": "国内開発者の年収調査2026が公開",
+    "category": "career",
+    "source": "stackoverflow",
+    "day": 1
+  },
+  "33189032e4fa64e9": {
+    "url": "https://example.invalid/hatena_it/1/45",
+    "title": "未経験からの転職事例まとめ",
+    "category": "career",
+    "source": "hatena_it",
+    "day": 1
+  },
+  "31c19fd000533e3d": {
+    "url": "https://example.invalid/openai_news/2/0",
+    "title": "OpenAI GPT-5 の提供地域が拡大 追加の価格改定も",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 2
+  },
+  "1b24e8eff4f27f3a": {
+    "url": "https://example.invalid/google_ai/2/1",
+    "title": "GPT-5 の性能検証結果が出そろう",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 2
+  },
+  "544d9a92341053ce": {
+    "url": "https://example.invalid/itmedia_ai/2/2",
+    "title": "Anthropic がモデル蒸留の適用結果を公開",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 2
+  },
+  "b99f27e82b5e2a30": {
+    "url": "https://example.invalid/hf_blog/2/3",
+    "title": "Claude の推論コスト引き下げによる影響",
+    "category": "ai",
+    "source": "hf_blog",
+    "day": 2
+  },
+  "5a9786ca3f9997ff": {
+    "url": "https://example.invalid/openai_news/2/4",
+    "title": "Claude Code の利用統計に関する分析",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 2
+  },
+  "b5351c447aec3f33": {
+    "url": "https://example.invalid/google_ai/2/5",
+    "title": "Claude の日本語性能について追加の検証",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 2
+  },
+  "884d5cdee20a7a59": {
+    "url": "https://example.invalid/itmedia_ai/2/6",
+    "title": "Anthropic が企業向けプランを改定",
+    "category": "ai",
+    "source": "itmedia_ai",
+    "day": 2
+  },
+  "9ee2a57eac463823": {
+    "url": "https://example.invalid/ts_devblog/2/7",
+    "title": "Rust 1.90 の非互換変更に関する補足",
+    "category": "lang",
+    "source": "ts_devblog",
+    "day": 2
+  },
+  "777a2ea6a6661467": {
+    "url": "https://example.invalid/aws_whatsnew/2/8",
+    "title": "AWS の新リージョンが稼働開始",
+    "category": "infra",
+    "source": "aws_whatsnew",
+    "day": 2
+  },
+  "4beef33bd25231c9": {
+    "url": "https://example.invalid/jpcert/2/9",
+    "title": "CVE-2026-1234 の修正版が配布開始",
+    "category": "security",
+    "source": "jpcert",
+    "day": 2
+  },
+  "cf59a44db5365156": {
+    "url": "https://example.invalid/itmedia_news/2/10",
+    "title": "クラウド市場の四半期シェアが公開",
+    "category": "industry",
+    "source": "itmedia_news",
+    "day": 2
+  },
+  "e6f0a98d52ced7fa": {
+    "url": "https://example.invalid/gizmodo_jp/2/11",
+    "title": "新型ノートPCの実機レビュー",
+    "category": "gadget",
+    "source": "gizmodo_jp",
+    "day": 2
+  },
+  "df8e13a53c81feb2": {
+    "url": "https://example.invalid/openai_news/3/0",
+    "title": "OpenAI GPT-5 の企業導入事例が公開",
+    "category": "ai",
+    "source": "openai_news",
+    "day": 3
+  },
+  "6f377bf4d51f28e2": {
+    "url": "https://example.invalid/google_ai/3/1",
+    "title": "OpenAI が GPT-5 の制限緩和を告知",
+    "category": "ai",
+    "source": "google_ai",
+    "day": 3
+  },
+  "532c3738a74ce202": {
+    "url": "https://example.invalid/python_insider/3/2",
+    "title": "Python 3.14 の移行ガイドが公開",
+    "category": "lang",
+    "source": "python_insider",
+    "day": 3
+  },
+  "3fd2dfc6b8963ecc": {
+    "url": "https://example.invalid/gihyo/3/3",
+    "title": "GitHub Copilot の新機能が追加",
+    "category": "devtools",
+    "source": "gihyo",
+    "day": 3
+  },
+  "3bea23a4746fa7b8": {
+    "url": "https://example.invalid/aws_whatsnew/3/4",
+    "title": "コンテナランタイムの一般提供が開始",
+    "category": "infra",
+    "source": "aws_whatsnew",
+    "day": 3
+  },
+  "a2f3933171485e4e": {
+    "url": "https://example.invalid/hatena_it/3/5",
+    "title": "開発者の学習時間に関する調査",
+    "category": "career",
+    "source": "hatena_it",
+    "day": 3
+  }
+}

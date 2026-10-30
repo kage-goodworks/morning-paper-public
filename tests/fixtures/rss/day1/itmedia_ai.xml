@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>itmedia_ai</title>
+    <link>https://example.invalid/itmedia_ai</link>
+    <description>itmedia_ai feed</description>
+    <item>
+      <title>Anthropic が Claude の長文脈モードを拡張</title>
+      <link>https://example.invalid/itmedia_ai/1/2</link>
+      <pubDate>2026-09-01T09:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>画像生成スタートアップが資金調達を完了</title>
+      <link>https://example.invalid/itmedia_ai/1/6</link>
+      <pubDate>2026-09-01T13:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>オープンウェイトモデルの採用が拡大</title>
+      <link>https://example.invalid/itmedia_ai/1/10</link>
+      <pubDate>2026-09-01T17:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>推論チップの新製品が発表</title>
+      <link>https://example.invalid/itmedia_ai/1/14</link>
+      <pubDate>2026-09-01T09:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>OpenAI が長文脈の検索精度を改善</title>
+      <link>https://example.invalid/itmedia_ai/1/18</link>
+      <pubDate>2026-09-01T13:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>OpenAI が埋め込みモデルを更新</title>
+      <link>https://example.invalid/itmedia_ai/1/22</link>
+      <pubDate>2026-09-01T17:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

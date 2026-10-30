@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>gihyo</title>
+    <link>https://example.invalid/gihyo</link>
+    <description>gihyo feed</description>
+    <item>
+      <title>GitHub Copilot の新機能が追加</title>
+      <link>https://example.invalid/gihyo/3/3</link>
+      <pubDate>2026-09-03T10:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

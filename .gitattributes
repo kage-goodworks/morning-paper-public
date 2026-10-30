@@ -1,0 +1,2 @@
+# シェルスクリプトは常に LF（ubuntu ランナーで CRLF は動かない）
+*.sh text eol=lf

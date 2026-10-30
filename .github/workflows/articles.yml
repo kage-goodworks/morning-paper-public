@@ -1,0 +1,215 @@
+# 記事化。Slackの「記事を作成」ボタン → Cloudflare Workers → ここ。
+#
+# **動作未確認。**第1段階は外部接続を持たないため、記述のみで検証していない。
+
+name: articles
+
+on:
+  repository_dispatch:
+    # articles-retry は自動のやり直し（morning.yml の最後と、Workers の 12:00 / 20:00 の Cron）
+    types: [articles, articles-retry]
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "対象日 YYYY-MM-DD"
+        required: true
+      all_of_date:
+        description: "その日の一覧に出た未作成の全話題を対象にする（story_ids は空でよい）"
+        type: boolean
+        default: false
+      force:
+        description: "作成済みも作り直す（紙面が届かなかった日の再送。all_of_date と一緒に使う）"
+        type: boolean
+        default: false
+      story_ids:
+        description: "空白区切りの story_id（all_of_date が false のとき）"
+        required: false
+        default: ""
+
+permissions:
+  contents: read            # state は非公開側へ deploy key で push する
+  actions: read             # やり直しで、前の実行の紙面（成果物）を取ってくる
+
+# 朝・記事化・週次は同じ列に並べて常に1つずつ動かす。3つとも state/ を
+# 書く（outbox.json は共通）ので、どれか2つが重なると push が競合して
+# 記録が残らない。重なるのは稀で、待ちは数分。
+# 列は分ける。GitHub は1つの列に「待ち」を1件しか置かず、新しい待ちが来ると古い
+# 待ちを黙って取り消す。朝・記事化・やり直しを同じ列にしていると、ボタンで押した
+# 記事化が後から来たやり直しに取り消され、一覧が「生成中」のまま残る（2026-10-30）。
+# state の書き込みは scripts/push_state.sh が JSON として併合するので、並んで動いても壊れない。
+# - ボタンからの記事化: 実行ごとに別の列（取り消されない）
+# - 自動のやり直し: やり直し同士だけで1列（重なっても後の1件で足りる）
+concurrency:
+  group: ${{ github.event.action == 'articles-retry' && 'morning-paper-retry' || format('morning-paper-articles-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+env:
+  TZ: Asia/Tokyo
+  PYTHONUNBUFFERED: "1"      # 進捗をその場でログへ出す。無いと打ち切り時に何も残らない
+  # 公開リポジトリのログは誰でも読める。失敗理由から中身を落とす（src/pipeline.py）
+  MORNING_PAPER_PUBLIC_LOG: "1"
+
+jobs:
+  # やり直しの起動のときだけ、待ち行列が空なら何もしないで終わる（数秒。重い準備をしない）
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - name: 非公開データの取得
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kage-goodworks/morning-paper-data
+          ssh-key: ${{ secrets.DATA_DEPLOY_KEY }}
+          path: private
+          sparse-checkout: state
+      - name: 待ち行列の確認
+        id: check
+        env:
+          EVENT_ACTION: ${{ github.event.action }}
+        run: |
+          if [ "$EVENT_ACTION" != "articles-retry" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; exit 0; fi
+          n=$(python3 -c "import json;print(len(json.load(open('private/state/outbox.json',encoding='utf-8')).get('redo') or []))" 2>/dev/null || echo 0)
+          echo "やり直しの待ち行列: ${n}項目"
+          if [ "$n" = "0" ]; then echo "run=false" >> "$GITHUB_OUTPUT"; else echo "run=true" >> "$GITHUB_OUTPUT"; fi
+
+  articles:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
+    runs-on: ubuntu-latest
+    # 選んだ全件を5件ずつ順に書く（5件あたり2〜3分）。NFR-6 は改定済み。
+    # 1日分（70〜80件＝16まとまり）をまとめて選ぶと 30 分では足りず、切られると
+    # 完了通知も記録も残らない（2026-09-29・30 に発生）。上限を上げ、Python 側は
+    # config の articles_time_budget_minutes（既定120分）で自分から止まる。
+    timeout-minutes: 150
+    steps:
+      - name: リポジトリの取得
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: 非公開データの取得
+        # 既読の記録・本人の像は公開リポジトリに置かず、非公開の morning-paper-data
+        # から取る（2026-10-31 公開化）。state/ と discovered_sources.yml はここを指す
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kage-goodworks/morning-paper-data
+          ssh-key: ${{ secrets.DATA_DEPLOY_KEY }}
+          path: private
+          persist-credentials: true
+
+      - name: 非公開データをつなぐ
+        run: |
+          ln -sfn private/state state
+          ln -sf private/discovered_sources.yml discovered_sources.yml
+
+      - name: Python 3.12 の用意
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 依存の導入
+        run: python -m pip install --upgrade pip && python -m pip install -e .
+
+      - name: Claude Code の導入
+        # 定額プランのトークン（CLAUDE_CODE_OAUTH_TOKEN）は Claude Code 経由で
+        # しか使えないため、非対話モード（claude -p）を子プロセスで呼ぶ。
+        run: npm install -g @anthropic-ai/claude-code@2 && claude --version
+
+      - name: 日本語フォントの導入
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+
+      - name: Playwright のキャッシュ
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+
+      - name: Chromium の導入
+        run: python -m playwright install --with-deps chromium
+
+      - name: 送れなかった紙面の取得（やり直しのとき）
+        # 前の実行で作ったが Slack へ送れなかった紙面を、書き直さずに送り直すため
+        if: github.event.action == 'articles-retry'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          PAPER_KEY: ${{ secrets.DATA_DEPLOY_KEY }}
+        run: |
+          ids=$(python3 -c "import json;d=json.load(open('state/outbox.json',encoding='utf-8'));print(' '.join(sorted({str(x.get('run_id')) for i in d.get('redo') or [] for x in i.get('deliveries') or [] if x.get('run_id')})))")
+          for id in $ids; do
+            dir="out/redeliver/$id"
+            if gh run download "$id" --repo "$REPO" -n papers -D "$dir"; then
+              openssl enc -d -aes-256-cbc -pbkdf2 -pass env:PAPER_KEY -in "$dir/papers.tar.gz.enc" \
+                | tar xzf - -C "$dir" --strip-components=2 || echo "紙面を開けません（run $id）"
+            else
+              echo "紙面が見つかりません（run $id）"
+            fi
+          done
+
+      - name: 記事化
+        # client_payload は env 経由で渡し、run: の中で ${{ }} に展開しない。
+        # シェルへ値が展開される経路を残さないため。
+        env:
+          STORY_IDS: ${{ join(github.event.client_payload.story_ids, ' ') || inputs.story_ids }}
+          ALL_OF_DATE: ${{ inputs.all_of_date && '1' || '' }}
+          FORCE: ${{ inputs.force && '1' || '' }}
+          TARGET_DATE: ${{ github.event.client_payload.date || inputs.date }}
+          MESSAGE_TS: ${{ github.event.client_payload.message_ts }}
+          THREAD_TS: ${{ github.event.client_payload.thread_ts }}
+          SLACK_CHANNEL: ${{ github.event.client_payload.channel }}
+          RETRY_QUEUE: ${{ github.event.action == 'articles-retry' && '1' || '' }}
+          # APIキーがあればそちらを優先。片方だけでも動く。
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          FIRECRAWL_API_KEY: ${{ secrets.FIRECRAWL_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          VAULT_DEPLOY_KEY: ${{ secrets.VAULT_DEPLOY_KEY }}
+        run: python -m src.articles
+
+      - name: 途中で止まったときの後始末
+        # 時間切れ（timeout-minutes）や失敗で一覧が「⏳ 生成中」のまま残り、
+        # 本人に何も届かないのを防ぐ。ボタンを戻し、作れなかった分は
+        # チェックを残し、チャンネルへ1文だけ知らせる。執筆はしない。
+        if: failure() || cancelled()
+        env:
+          RESTORE_ONLY: "1"
+          STORY_IDS: ${{ join(github.event.client_payload.story_ids, ' ') || inputs.story_ids }}
+          ALL_OF_DATE: ${{ inputs.all_of_date && '1' || '' }}
+          TARGET_DATE: ${{ github.event.client_payload.date || inputs.date }}
+          MESSAGE_TS: ${{ github.event.client_payload.message_ts }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+        run: python -m src.articles
+
+      - name: 紙面の暗号化
+        # 公開リポジトリの成果物は誰でも取れる。紙面（本人向けの記事）は暗号化して
+        # から残す。鍵は非公開データの deploy key（Secrets）を流用する（2026-10-31）
+        if: always()
+        env:
+          PAPER_KEY: ${{ secrets.DATA_DEPLOY_KEY }}
+        run: |
+          shopt -s nullglob
+          files=(out/paper/*.pdf)
+          if [ ${#files[@]} -gt 0 ]; then
+            mkdir -p out/sealed
+            tar czf - "${files[@]}" | openssl enc -aes-256-cbc -pbkdf2 -salt -pass env:PAPER_KEY -out out/sealed/papers.tar.gz.enc
+          fi
+
+      - name: 紙面を成果物として残す
+        # 送れなかったときに、やり直しで書き直さずに送り直すため（7日で消える）
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: papers
+          path: out/sealed/papers.tar.gz.enc
+          retention-days: 7
+          if-no-files-found: ignore
+
+      - name: 状態のcommit
+        # 失敗・中断のときも記録する（後始末でやり直しの待ち行列へ入れた分を残すため）
+        if: always()
+        # 自分が書いた state を origin/main の最新へ JSON として併合してから push
+        # する（scripts/push_state.sh）。rebase だと written.json の末尾追記どうしで
+        # 必ず競合し、記録が消える（2026-10-01 に発生）。
+        run: |
+          cd private && ../scripts/push_state.sh "auto: articles $(date +%F)" state/*.json

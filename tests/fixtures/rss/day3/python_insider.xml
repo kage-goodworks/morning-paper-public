@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>python_insider</title>
+    <link>https://example.invalid/python_insider</link>
+    <description>python_insider feed</description>
+    <item>
+      <title>Python 3.14 の移行ガイドが公開</title>
+      <link>https://example.invalid/python_insider/3/2</link>
+      <pubDate>2026-09-03T09:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>Python 3.14 の移行ガイドが公開。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

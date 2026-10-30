@@ -1,0 +1,95 @@
+# 週次レビュー（反応の変化）。毎週月曜 05:30 JST。
+# 日次の実行（04:40）と重ならない時刻にする（FR-11）。
+#
+# **動作未確認。**第1段階は外部接続を持たないため、記述のみで検証していない。
+
+name: weekly
+
+on:
+  schedule:
+    - cron: "30 20 * * 0"   # 月曜 05:30 Asia/Tokyo（日曜 20:30 UTC）
+  workflow_dispatch:
+
+permissions:
+  contents: read            # state は非公開側へ deploy key で push する
+
+# 朝・記事化・週次は同じ列に並べて常に1つずつ動かす。3つとも state/ を
+# 書く（outbox.json は共通）ので、どれか2つが重なると push が競合して
+# 記録が残らない。重なるのは稀で、待ちは数分。
+concurrency:
+  group: morning-paper-weekly
+  cancel-in-progress: false
+
+env:
+  TZ: Asia/Tokyo
+  PYTHONUNBUFFERED: "1"      # 進捗をその場でログへ出す。無いと打ち切り時に何も残らない
+  # 公開リポジトリのログは誰でも読める。失敗理由から中身を落とす（src/pipeline.py）
+  MORNING_PAPER_PUBLIC_LOG: "1"
+
+jobs:
+  weekly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: リポジトリの取得
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: 非公開データの取得
+        # 既読の記録・本人の像は公開リポジトリに置かず、非公開の morning-paper-data
+        # から取る（2026-10-31 公開化）。state/ と discovered_sources.yml はここを指す
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kage-goodworks/morning-paper-data
+          ssh-key: ${{ secrets.DATA_DEPLOY_KEY }}
+          path: private
+          persist-credentials: true
+
+      - name: 非公開データをつなぐ
+        run: |
+          ln -sfn private/state state
+          ln -sf private/discovered_sources.yml discovered_sources.yml
+
+      - name: Python 3.12 の用意
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 依存の導入
+        run: python -m pip install --upgrade pip && python -m pip install -e .
+
+      - name: Claude Code の導入
+        # 定額プランのトークン（CLAUDE_CODE_OAUTH_TOKEN）は Claude Code 経由で
+        # しか使えないため、非対話モード（claude -p）を子プロセスで呼ぶ。
+        run: npm install -g @anthropic-ai/claude-code@2 && claude --version
+
+      - name: 日本語フォントの導入
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+
+      - name: Playwright のキャッシュ
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+
+      - name: Chromium の導入
+        run: python -m playwright install --with-deps chromium
+
+      - name: 週次レビュー
+        # 変化が0件の週はレビューを作らず、Slackへも投稿しない（FR-11）。
+        env:
+          # APIキーがあればそちらを優先。片方だけでも動く。
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          VAULT_DEPLOY_KEY: ${{ secrets.VAULT_DEPLOY_KEY }}
+        run: python -m src.weekly
+
+      - name: 状態のcommit
+        # 自分が書いた state を origin/main の最新へ JSON として併合してから push
+        # する（scripts/push_state.sh）。rebase だと written.json の末尾追記どうしで
+        # 必ず競合し、記録が消える（2026-10-01 に発生）。
+        run: |
+          cd private && ../scripts/push_state.sh "auto: weekly $(date +%F)" state/*.json

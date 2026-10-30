@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>github_blog</title>
+    <link>https://example.invalid/github_blog</link>
+    <description>github_blog feed</description>
+    <item>
+      <title>GitHub Actions のキャッシュが高速化</title>
+      <link>https://example.invalid/github_blog/1/28</link>
+      <pubDate>2026-09-01T11:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>GitHub Actions のキャッシュが高速化。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

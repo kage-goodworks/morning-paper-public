@@ -1,0 +1,45 @@
+# Slack アプリの定義。
+#
+# https://api.slack.com/apps → Create New App → From a manifest で
+# このファイルの中身をそのまま貼る。
+#
+# 権限をここで宣言しておくと、Bot Token Scopes と User Token Scopes を
+# 取り違える事故が起きない。必要なのは Bot 側の3つだけ。
+#
+# interactivity（ボタンの受け取り）の宛先は Cloudflare Workers。
+# 2026-09-14 にデプロイ済みで、URLは下の request_url のとおり。
+
+display_information:
+  name: morning-paper
+  description: 毎朝のITニュースを話題ごとに届け、選んだものを紙面画像にして返します
+  background_color: "#17191e"
+
+features:
+  bot_user:
+    # Slackワークスペース上の表示名。2026-09-14 に「朝刊」から変更した。
+    # アプリは作成済みなので、このファイルは実態の控えとして合わせてある。
+    display_name: news
+    always_online: false
+
+oauth_config:
+  scopes:
+    bot:
+      # 一覧の投稿、スレッドへの返信、記事化後の書き換え（chat.update）
+      - chat:write
+      # 招待し忘れても公開チャンネルへ投稿できるようにする保険
+      - chat:write.public
+      # 紙面PDFの添付
+      - files:write
+      # 投稿の直後に応答が落ちた／処理が死んだ、のあとの再実行で二重投稿しない
+      # ために、直近の履歴から「同じ本文の投稿」を探す。読むのは自分の
+      # チャンネルの直近36時間だけ（channels = 公開、groups = 非公開）
+      - channels:history
+      - groups:history
+
+settings:
+  interactivity:
+    is_enabled: true
+    request_url: https://morning-paper.kage-goodworks.workers.dev
+  org_deploy_enabled: false
+  socket_mode_enabled: false
+  token_rotation_enabled: false

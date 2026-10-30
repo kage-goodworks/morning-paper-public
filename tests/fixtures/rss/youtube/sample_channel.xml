@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:yt="http://www.youtube.com/xml/schemas/2015">
+  <title>sample_channel_a</title>
+  <entry>
+    <title>週刊AIニュース解説</title>
+    <yt:videoId>vid0001</yt:videoId>
+    <published>2026-09-03T09:00:00+09:00</published>
+  </entry>
+</feed>

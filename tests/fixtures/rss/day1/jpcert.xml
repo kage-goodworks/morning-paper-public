@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>jpcert</title>
+    <link>https://example.invalid/jpcert</link>
+    <description>jpcert feed</description>
+    <item>
+      <title>多要素認証の回避手口が報告</title>
+      <link>https://example.invalid/jpcert/1/39</link>
+      <pubDate>2026-09-01T10:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

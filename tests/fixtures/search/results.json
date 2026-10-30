@@ -1,0 +1,19 @@
+{
+  "items": [
+    {
+      "title": "新興メディアの解説記事",
+      "url": "https://newsite-a.invalid/post/1",
+      "category": "ai"
+    },
+    {
+      "title": "技術ブログの検証記事",
+      "url": "https://newsite-b.invalid/post/2",
+      "category": "devtools"
+    },
+    {
+      "title": "企業の公式発表",
+      "url": "https://newsite-a.invalid/post/3",
+      "category": "industry"
+    }
+  ]
+}

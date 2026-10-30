@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>openai_news</title>
+  <entry>
+    <title>OpenAI GPT-5 の企業導入事例が公開</title>
+    <link href="https://example.invalid/openai_news/3/0"/>
+    <published>2026-09-03T07:00:00+09:00</published>
+  </entry>
+</feed>

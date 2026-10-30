@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>github_change</title>
+    <link>https://example.invalid/github_change</link>
+    <description>github_change feed</description>
+    <item>
+      <title>VSCode の拡張機能APIが更新</title>
+      <link>https://example.invalid/github_change/1/29</link>
+      <pubDate>2026-09-01T12:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>VSCode の拡張機能APIが更新。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

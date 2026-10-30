@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>google_ai</title>
+    <link>https://example.invalid/google_ai</link>
+    <description>google_ai feed</description>
+    <item>
+      <title>GPT-5 の性能検証結果が出そろう</title>
+      <link>https://example.invalid/google_ai/2/1</link>
+      <pubDate>2026-09-02T08:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>Claude の日本語性能について追加の検証</title>
+      <link>https://example.invalid/google_ai/2/5</link>
+      <pubDate>2026-09-02T12:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

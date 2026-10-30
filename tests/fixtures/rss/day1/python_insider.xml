@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>python_insider</title>
+    <link>https://example.invalid/python_insider</link>
+    <description>python_insider feed</description>
+    <item>
+      <title>Cargo のワークスペース機能が改善</title>
+      <link>https://example.invalid/python_insider/1/26</link>
+      <pubDate>2026-09-01T09:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>Cargo のワークスペース機能が改善。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

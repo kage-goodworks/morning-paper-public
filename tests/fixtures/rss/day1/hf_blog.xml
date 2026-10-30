@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>hf_blog</title>
+    <link>https://example.invalid/hf_blog</link>
+    <description>hf_blog feed</description>
+    <item>
+      <title>国内企業の生成AI導入率が42%に</title>
+      <link>https://example.invalid/hf_blog/1/3</link>
+      <pubDate>2026-09-01T10:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>AI エージェント向けの評価基盤が公開</title>
+      <link>https://example.invalid/hf_blog/1/7</link>
+      <pubDate>2026-09-01T14:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>AI 規制の国内ガイドラインが改訂</title>
+      <link>https://example.invalid/hf_blog/1/11</link>
+      <pubDate>2026-09-01T18:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>生成AIの社内利用ポリシー策定が進む</title>
+      <link>https://example.invalid/hf_blog/1/15</link>
+      <pubDate>2026-09-01T10:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>Claude の日本語性能に関する検証</title>
+      <link>https://example.invalid/hf_blog/1/19</link>
+      <pubDate>2026-09-01T14:00:00+09:00</pubDate>
+    </item>
+    <item>
+      <title>Claude Code の利用統計が公開</title>
+      <link>https://example.invalid/hf_blog/1/23</link>
+      <pubDate>2026-09-01T18:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

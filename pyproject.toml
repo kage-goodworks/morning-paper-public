@@ -1,0 +1,23 @@
+[project]
+name = "morning-paper"
+version = "0.1.0"
+description = "毎朝のITニュースを話題単位でSlackへ送り、選ばれた話題を紙面画像にする自動化"
+requires-python = "==3.12.*"
+
+# 依存は最小限にする。追加した理由は README の「依存」節に書く。
+dependencies = [
+    "PyYAML>=6.0",      # config.yml の読み込み
+    "playwright>=1.47", # 紙面HTMLをChromiumで撮影してPNG化する。唯一モックしない外部依存
+    "anthropic>=1.0",   # 記事の執筆。Claudeは公式SDKで呼ぶ
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+# 本文抽出の2段目を精度の高い実装に差し替える。無くても動く（自前の抽出へ
+# 落ちる）が、実運用では入れたほうが取りこぼしが減る。
+extract = ["trafilatura>=1.12"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# 外部通信・git・Slack APIを呼ぶテストは書かない。対象は純粋関数だけ。
+addopts = "-q"

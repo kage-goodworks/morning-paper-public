@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>google_ai</title>
+    <link>https://example.invalid/google_ai</link>
+    <description>google_ai feed</description>
+    <item>
+      <title>OpenAI が GPT-5 の制限緩和を告知</title>
+      <link>https://example.invalid/google_ai/3/1</link>
+      <pubDate>2026-09-03T08:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

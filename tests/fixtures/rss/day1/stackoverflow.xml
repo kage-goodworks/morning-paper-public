@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>stackoverflow</title>
+    <link>https://example.invalid/stackoverflow</link>
+    <description>stackoverflow feed</description>
+    <item>
+      <title>国内開発者の年収調査2026が公開</title>
+      <link>https://example.invalid/stackoverflow/1/44</link>
+      <pubDate>2026-09-01T15:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

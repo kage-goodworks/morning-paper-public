@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>krebs</title>
+    <link>https://example.invalid/krebs</link>
+    <description>krebs feed</description>
+    <item>
+      <title>OpenSSL に深刻な脆弱性 CVE-2026-1234</title>
+      <link>https://example.invalid/krebs/1/37</link>
+      <pubDate>2026-09-01T08:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>OpenSSL に深刻な脆弱性 CVE-2026-1234。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>mado_no_mori</title>
+    <link>https://example.invalid/mado_no_mori</link>
+    <description>mado_no_mori feed</description>
+    <item>
+      <title>新型ノートPCの実機レビュー</title>
+      <link>https://example.invalid/mado_no_mori/2/11</link>
+      <pubDate>2026-09-02T18:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

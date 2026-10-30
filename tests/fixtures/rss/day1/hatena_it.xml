@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>hatena_it</title>
+    <link>https://example.invalid/hatena_it</link>
+    <description>hatena_it feed</description>
+    <item>
+      <title>未経験からの転職事例まとめ</title>
+      <link>https://example.invalid/hatena_it/1/45</link>
+      <pubDate>2026-09-01T16:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

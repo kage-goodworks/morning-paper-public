@@ -1,0 +1,205 @@
+# 朝刊パイプラインの設定。値をコードへ直書きしない（NFR-7）。
+schedule:
+  timezone: Asia/Tokyo
+  start_at: "04:40"
+  weekly_review: "MON 05:30"
+
+write:
+  model: claude
+  fallback_model: gemini
+  # 「自分との関係」を書くときの読み手像。執筆プロンプトの PROFILE に入る。
+  # ここを直すと要約の切り口が変わる（本人の要望、2026-10-01: ありきたりな
+  # 一般論ではなく、自分の開発・将来・既存システムへの影響・市場への波及まで）。
+  # 本人の像は公開リポジトリに置かない。非公開の morning-paper-data の profile.md を
+  # Actions が private/ に取ってきて読む（2026-10-31 公開化）。無ければ一般論で書く
+  reader_profile_file: private/profile.md
+
+# 実際に呼ぶモデル名。引退したら診断（src.check）が候補を出すのでここを直す。
+models:
+  # 2026-10-27 から Claude Pro。執筆は1日80件前後あり、Opus では利用枠に当たりやすい
+  # （10/27 に一部が Gemini へ落ちた）。速く、枠の消費も少ない Sonnet で書く（2026-10-30）
+  claude: claude-sonnet-5
+  # gemini-2.5-flash は 2026-09 に新規提供終了。-latest は常に最新の flash を指す別名
+  gemini: gemini-flash-latest
+  # 本命が 404（引退）/ 503（混雑）のとき順に試す
+  # gemini-2.5-flash-lite は 2026-09 に新規提供終了（後継は 3.5-flash-lite）
+  gemini_fallbacks: [gemini-flash-lite-latest, gemini-3.5-flash-lite]
+
+categories:
+  order: [ai, lang, devtools, infra, industry, security, gadget, keyboard, career]
+  labels:
+    ai: AI・機械学習
+    lang: 言語・フレームワーク
+    devtools: 開発ツール・環境
+    infra: クラウド・インフラ
+    industry: 業界動向
+    security: セキュリティ
+    gadget: ガジェット
+    keyboard: キーボード
+    career: 学習・キャリア
+  # 見出しのキーワードによる上書き。ソース既定より優先する。
+  keywords:
+    ai: [OpenAI, Anthropic, Claude, Gemini, GPT, LLM, 機械学習, 推論モデル, arXiv]
+    lang: [Rust, Python, TypeScript, Go, Ruby, Kotlin, Swift, リリース]
+    devtools: [VSCode, Neovim, Git, CI, npm, cargo, ターミナル]
+    infra: [AWS, Azure, GCP, Kubernetes, Docker, PostgreSQL, CDN]
+    industry: [買収, 資金調達, 決算, 人事, 提携]
+    security: [脆弱性, CVE, インシデント, ランサムウェア, 認証]
+    gadget: [ThinkPad, MacBook, スマートフォン, 周辺機器]
+    keyboard: [自作キーボード, キーキャップ, HHKB, 軸]
+    career: [求人, 年収, 開発者調査, 学習]
+
+story:
+  keyword_overlap: 0.5
+  stopwords: [the, and, for, with, from, that, this, into, over, new, now, its, has, are, was, will]
+
+reactions:
+  x_enabled: false
+  target_categories: [ai, lang, devtools, infra, industry, security]
+  thresholds: { hn_points: 100, hatena: 50, reddit: 50 }
+  weekly_review_categories: [ai, lang, devtools, infra, industry, security]
+  batch_size: 5
+
+# 記事化した中身を、主題ごとの知識ノートとして Vault に積む（2026-10-15 追加）。
+# どの AI からでも「ここ3日のニュース」「〇〇の最新の動き」に答えられるようにする。
+knowledge:
+  enabled: true
+  dir: 40_Knowledge/Tech     # vault_git.ALLOWED_PREFIXES と合わせる
+  recent_days: 30            # 索引の「最近の追加」に残す日数
+
+# GitHub Actions の利用時間（2026-10-30）。非公開リポジトリの無料枠は月2,000分。
+# 使い切ると朝の処理も動かない。見積りが soft を超えたら自動の作り直しを止め、1度知らせる
+budget:
+  monthly_minutes_soft: 1600
+  monthly_minutes_limit: 2000
+  setup_minutes: 4           # 依存・フォント・Chromium の導入など、Python の外の時間の見積り
+
+# 記事化の自動やり直し（2026-10-24）。Slack に送れなかった・AI が応答しなかった・
+# 時間切れ・途中で止まった話題を、本人が押し直さなくても後の実行で作って送る。
+# 待ち行列は朝の処理のあと・12:00・20:00 に処理する（Cloudflare の Cron と morning.yml）。
+auto_retry:
+  enabled: true
+  max_attempts: 10                       # これを超えたら、その一覧のスレッドへ理由を1通出して諦める
+  regenerations_per_day: 3               # AI で作り直すのは同じ項目につき1日この回数まで（送り直しは制限なし）
+  diagnose_after: 5                      # これを超えて駄目なら原因を調べ、対策を入れて再挑戦する（src/redo_doctor.py）
+  delivery_waits_seconds: [60, 180, 300] # 紙面を送れないとき、同じ実行の中で送り直すまでの待ち
+
+limits:
+  per_category: 12
+  carryover_days: 7
+  listed_days: 90            # 一覧に出した話題をstate.jsonに残す日数。Slackの履歴が90日
+  articles_per_request: 5
+  write_parallel: 2          # まとまりを同時に書く数。実行時間をおよそ半分にする
+  # 1回の記事化に使う時間の上限（分）。超えたら残りは次回に回し、作れた分を
+  # 送る。Actions の timeout-minutes より短くしておく（切られると何も届かない）
+  articles_time_budget_minutes: 120
+  weekly_batch_size: 5       # 週次レビューのLLM 1回あたりの話題数
+  article_chars: [600, 900]
+  career_hint_per_request: 1
+  firecrawl_monthly: 900
+  extract_seconds: 360       # 本文取得全体の上限。朝のジョブを15分に収める（NFR-6）
+  gallery_items: 6           # 写真集1ページに並べる投稿の数
+
+retry:
+  attempts: 3
+  backoff_seconds: [1, 4, 16]
+
+fallback:
+  trigger_count: 5
+  promote_after: 3
+
+dedupe:
+  title_similarity: 0.85
+  title_memory_days: 7
+
+slack:
+  # 投稿先のチャンネルID。秘密ではないのでここに置く。
+  # 空にすると環境変数 SLACK_CHANNEL を見る。
+  channel: "C0C1FCDE0EP"
+  # 生成した記事（紙面PDF）だけを送るチャンネルのID。空なら一覧と同じチャンネル。
+  # 一覧のチャンネルを「その日の一覧」だけに保つため（本人の要望、2026-10-02）。
+  # **bot（news）をそのチャンネルに招待しておくこと。**未参加だと共有できない
+  articles_channel: "C0C5R3N7QNT"   # #記事（2026-10-02 に本人が作成。bot 参加済み）
+  # 失敗通知を、チャンネルではなくその日の一覧のスレッドへ出す。通知は残るが、
+  # 一覧の並びには割り込まない。false にすると従来どおりチャンネルへ出る
+  errors_in_thread: true
+  checkbox_options_max: 10
+  blocks_per_message: 45
+
+quotes:
+  # Yahoo Finance の表記。^GSPC は S&P 500
+  symbols: [NVDA, MSFT, AAPL, GOOGL, AMD, ^GSPC]
+
+releases:
+  repos: [rust-lang/rust, python/cpython, denoland/deno, golang/go]
+
+# 情報源。カテゴリごとに3〜5本から始める（Progress「着工前に用意するもの」）。
+#
+# **[要検証] URLは定番のものを選んだが、実際に取得できるかは未確認。**
+# フィードのURLはサイト改修で変わる。実キー投入の前に次を実行して確かめること。
+#
+#     .venv/Scripts/python.exe scripts/verify_sources.py
+#
+# `fulltext: true` はフィードが本文を全文配信しているもの。本文取得の1段目で
+# 済むので、取りに行く回数が減る。判断がつかないものは false にしてある。
+sources:
+  # --- AI・機械学習 ---------------------------------------------------------
+  - { id: openai_news,     type: rss, url: "https://openai.com/news/rss.xml",                            category: ai,       fulltext: false }
+  - { id: google_ai,       type: rss, url: "https://blog.google/technology/ai/rss/",                     category: ai,       fulltext: false }
+  - { id: itmedia_ai,      type: rss, url: "https://rss.itmedia.co.jp/rss/2.0/aiplus.xml",               category: ai,       fulltext: false }
+  - { id: hf_blog,         type: rss, url: "https://huggingface.co/blog/feed.xml",                       category: ai,       fulltext: false }
+
+  # --- 言語・フレームワーク --------------------------------------------------
+  - { id: rust_blog,       type: rss, url: "https://blog.rust-lang.org/feed.xml",                        category: lang,     fulltext: true  }
+  - { id: go_blog,         type: rss, url: "https://go.dev/blog/feed.atom",                              category: lang,     fulltext: true  }
+  - { id: python_insider,  type: rss, url: "https://pythoninsider.blogspot.com/feeds/posts/default",     category: lang,     fulltext: true  }
+  - { id: ts_devblog,      type: rss, url: "https://devblogs.microsoft.com/typescript/feed/",            category: lang,     fulltext: true  }
+
+  # --- 開発ツール・環境 ------------------------------------------------------
+  - { id: github_blog,     type: rss, url: "https://github.blog/feed/",                                  category: devtools, fulltext: true  }
+  - { id: github_change,   type: rss, url: "https://github.blog/changelog/feed/",                        category: devtools, fulltext: true  }
+  - { id: vscode,          type: rss, url: "https://code.visualstudio.com/feed.xml",                     category: devtools, fulltext: false }
+  - { id: gihyo,           type: rss, url: "https://gihyo.jp/feed/atom",                                 category: devtools, fulltext: false }
+
+  # --- クラウド・インフラ ----------------------------------------------------
+  - { id: aws_whatsnew,    type: rss, url: "https://aws.amazon.com/about-aws/whats-new/recent/feed/",     category: infra,    fulltext: false }
+  - { id: cloudflare,      type: rss, url: "https://blog.cloudflare.com/rss/",                           category: infra,    fulltext: true  }
+  - { id: kubernetes,      type: rss, url: "https://kubernetes.io/feed.xml",                             category: infra,    fulltext: false }
+  - { id: postgresql,      type: rss, url: "https://www.postgresql.org/news.rss",                        category: infra,    fulltext: false }
+
+  # --- 業界動向 -------------------------------------------------------------
+  - { id: publickey,       type: rss, url: "https://www.publickey1.jp/atom.xml",                         category: industry, fulltext: false }
+  - { id: techcrunch,      type: rss, url: "https://techcrunch.com/feed/",                               category: industry, fulltext: false }
+  - { id: itmedia_news,    type: rss, url: "https://rss.itmedia.co.jp/rss/2.0/news_bursts.xml",          category: industry, fulltext: false }
+  - { id: arstechnica,     type: rss, url: "https://feeds.arstechnica.com/arstechnica/index",            category: industry, fulltext: false }
+
+  # --- セキュリティ ---------------------------------------------------------
+  - { id: jpcert,          type: rss, url: "https://www.jpcert.or.jp/rss/jpcert.rdf",                    category: security, fulltext: false }
+  - { id: krebs,           type: rss, url: "https://krebsonsecurity.com/feed/",                          category: security, fulltext: true  }
+  - { id: thehackernews,   type: rss, url: "https://feeds.feedburner.com/TheHackersNews",                category: security, fulltext: false }
+
+  # --- ガジェット -----------------------------------------------------------
+  - { id: pc_watch,        type: rss, url: "https://pc.watch.impress.co.jp/data/rss/1.0/pcw/feed.rdf",   category: gadget,   fulltext: false }
+  - { id: theverge,        type: rss, url: "https://www.theverge.com/rss/index.xml",                     category: gadget,   fulltext: false }
+  - { id: mado_no_mori,    type: rss, url: "https://forest.watch.impress.co.jp/data/rss/1.0/wf/feed.rdf", category: gadget,  fulltext: false }
+  - { id: gizmodo_jp,      type: rss, url: "https://www.gizmodo.jp/index.xml",                          category: gadget,   fulltext: false }
+
+  # --- キーボード -----------------------------------------------------------
+  # Reddit は未認証だとレート制限（HTTP 429）に当たりやすい。落ちた日に
+  # このカテゴリが空にならないよう、Reddit以外も入れてある。
+  - { id: hackaday_kb,     type: rss, url: "https://hackaday.com/tag/keyboard/feed/",                    category: keyboard, fulltext: true  }
+  - { id: splitkb,         type: rss, url: "https://blog.splitkb.com/rss/",                              category: keyboard, fulltext: true  }
+  - { id: keychron,        type: rss, url: "https://www.keychron.com/blogs/news.atom",                   category: keyboard, fulltext: true  }
+  # メーカー公式（2026-09-17 追加。個人の投稿より公式の新製品・新技術を優先）
+  - { id: lofree,          type: rss, url: "https://www.lofree.co/blogs/news.atom",                      category: keyboard, fulltext: true  }
+  - { id: akko_jp,         type: rss, url: "https://akkogear.jp/blogs/media.atom",                       category: keyboard, fulltext: false }
+  - { id: akko_en,         type: rss, url: "https://en.akkogear.com/feed/",                              category: keyboard, fulltext: false }
+  # WOBKEY はブログが止まっているので製品カタログのフィード（新製品が並ぶ）
+  - { id: wobkey,          type: rss, url: "https://www.wobkey.com/collections/all.atom",                category: keyboard, fulltext: false }
+  # 個人の投稿は「写真集」型（type: gallery）。1件ずつ一覧に流さず、その日の
+  # 上位を写真集として1行にまとめ、記事化すると1ページに写真が並ぶ
+  - { id: r_mechkeyboards, type: gallery, url: "https://www.reddit.com/r/MechanicalKeyboards/top/.rss?t=day", category: keyboard }
+
+  # --- 学習・キャリア -------------------------------------------------------
+  - { id: stackoverflow,   type: rss, url: "https://stackoverflow.blog/feed/",                           category: career,   fulltext: false }
+  - { id: hatena_it,       type: rss, url: "https://b.hatena.ne.jp/hotentry/it.rss",                     category: career,   fulltext: false }

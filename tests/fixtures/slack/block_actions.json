@@ -1,0 +1,59 @@
+{
+  "type": "block_actions",
+  "user": {
+    "id": "U0000001"
+  },
+  "channel": {
+    "id": "C0000001"
+  },
+  "message": {
+    "ts": "1756000000.000100"
+  },
+  "actions": [
+    {
+      "action_id": "create_articles",
+      "type": "button"
+    }
+  ],
+  "state": {
+    "values": {
+      "cat_ai_0": {
+        "stories_ai_0": {
+          "type": "checkboxes",
+          "selected_options": [
+            {
+              "value": "s_000001"
+            },
+            {
+              "value": "s_000002"
+            },
+            {
+              "value": "s_000003"
+            },
+            {
+              "value": "s_000004"
+            },
+            {
+              "value": "s_000005"
+            },
+            {
+              "value": "s_000006"
+            },
+            {
+              "value": "s_000007"
+            },
+            {
+              "value": "s_000008"
+            }
+          ]
+        }
+      },
+      "cat_lang_0": {
+        "stories_lang_0": {
+          "type": "checkboxes",
+          "selected_options": []
+        }
+      }
+    }
+  }
+}

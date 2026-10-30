@@ -1,0 +1,31 @@
+# 監視するYouTubeチャンネル。
+#
+# **[未選定] チャンネルIDが必要なので、こちらでは決められない。**
+# 見たいチャンネルが決まったら、次の手順で `id` を調べて追記する。
+#
+# 1. チャンネルのページを開く
+# 2. ページのソースを表示し、`channelId` を検索する（`UC` で始まる24文字）
+# 3. 下の例の形式で1行足す
+#
+# 例:
+#   - { id: some_channel, url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCxxxxxxxxxxxxxxxxxxxxxx", category: ai }
+#
+# 動画は本文が無いので、Geminiに要約させたものを本文として扱う（FR-1）。
+# 空のままでも朝の処理は動く。YouTubeを使わないだけ。
+channels:
+  # ガジェット系（2026-09-17）。動画は Gemini に要約させる。
+  # 取得は YOUTUBE_API_KEY があれば公式の YouTube Data API（安定）、無ければ
+  # ここの RSS（非公式。データセンターの IP からは日によって 404/500）。
+  - { id: yt_hiraoka,   url: "https://www.youtube.com/feeds/videos.xml?channel_id=UC7P3bmkbTdAXaJYzhuF2obA", category: gadget }   # 平岡雄太（デザイン寄りのガジェット・デスク周り）
+  - { id: yt_thomas,    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCzmxo1Zj4KkM32FlObFWdeA", category: gadget }   # トーマスガジェマガ（実用寄りのレビュー）
+  - { id: yt_saityo,    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCu8Jtlcv4Q2P4VeGwwiPnTg", category: gadget }   # さいちょう（案件なし。週1・金曜17時）
+  - { id: yt_monograph, url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCyHnsPzo_FB2O08mzfs9SrQ", category: gadget }
+  - { id: yt_gizmodo,   url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCZm3dECbQU33IWG5MQ-NAdw", category: gadget }
+  # 2026-09-18 追加（本人の指名）
+  - { id: yt_ai_geboku,   url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCNBWx9JET3iRoCXliY2G4rQ", category: ai }       # AI様の下僕（AIを使った制作・新技術）
+  - { id: yt_shintani,    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCh0TEuq5gkKgMvn7V8GFXsw", category: gadget }   # オフィス新谷（ガジェット・デスク周り）
+  - { id: yt_miyaji,      url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCPsvZcvPTyKX9hxNwR6SNcg", category: gadget }   # みやじぃ iPhone / ショートカット（効率化）
+  - { id: yt_techworld,   url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCISDrqLMNq3w9AZ4otdoRuA", category: career }   # TECH WORLD（エンジニア視点・業界の話）
+  - { id: yt_saityo2,     url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCVUOqvMUHCs-WK6aqe62eJw", category: gadget }   # さいちょう2nd
+  - { id: yt_webmania,    url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCvpDuJLRV07mTu6gh9CGq0w", category: devtools } # ウェブマニア（Web・ブラウザ）
+  # ネコテッケン・ウシャスライム: チャンネルの URL が分かり次第追加

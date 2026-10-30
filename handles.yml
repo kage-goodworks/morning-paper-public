@@ -1,0 +1,5 @@
+# X検索で信頼するアカウント。x_enabled が true のときだけ使う。仮のダミー。
+allowed_x_handles:
+  - example_dev_1
+  - example_dev_2
+  - example_dev_3

@@ -1,0 +1,132 @@
+/* A4縦 1240 x 1754 px（deviceScaleFactor: 2 で実出力 2480 x 3508）の紙面。
+ *
+ * 書体は Noto Sans JP と Noto Serif JP。runner には日本語フォントが無いので
+ * fonts-noto-cjk を導入してから撮る（Spec「紙面」）。
+ *
+ * サブピクセルアンチエイリアス（ClearType）は細い字画へ色のにじみを出すため、
+ * グレースケールへ固定して出力を安定させる。 */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
+
+.sheet {
+  width: 1240px;
+  height: 1754px;
+  padding: 56px 60px 48px;
+  background: #ffffff;
+  color: #111111;
+  font-family: "Noto Sans JP", "Yu Gothic", "Hiragino Sans", Meiryo, sans-serif;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* --- 題字 ------------------------------------------------------------- */
+
+.masthead {
+  border-bottom: 3px solid #111111;
+  padding-bottom: 14px;
+  margin-bottom: 26px;
+  flex: 0 0 auto;
+}
+
+.masthead .title {
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+}
+
+.masthead .meta {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 17px;
+  color: #444444;
+  letter-spacing: 0.04em;
+}
+
+/* --- 段組 ------------------------------------------------------------- */
+
+.columns {
+  flex: 1 1 auto;
+  column-count: 2;
+  column-gap: 44px;
+  column-rule: 1px solid #cccccc;
+  overflow: hidden;
+}
+
+.story {
+  break-inside: avoid-column;
+  margin: 0 0 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #dddddd;
+}
+
+.story:last-child {
+  border-bottom: none;
+}
+
+.story h2 {
+  font-family: "Noto Serif JP", "Yu Mincho", serif;
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.38;
+  margin: 0 0 12px;
+  padding-left: 13px;
+  border-left: 5px solid #111111;
+}
+
+.story .timeline {
+  font-size: 15px;
+  color: #555555;
+  margin-bottom: 10px;
+  padding: 5px 9px;
+  background: #f4f4f4;
+  border-radius: 3px;
+}
+
+.story .body p {
+  font-size: 17px;
+  line-height: 1.92;
+  margin: 0 0 13px;
+  text-align: justify;
+}
+
+.story .body h3,
+.story .body h4 {
+  font-size: 19px;
+  margin: 16px 0 8px;
+}
+
+.story .sources {
+  margin-top: 12px;
+  padding-top: 9px;
+  border-top: 1px dotted #bbbbbb;
+  font-size: 13px;
+  line-height: 1.65;
+  color: #555555;
+  word-break: break-all;
+}
+
+/* --- 切り替わりの通知 ---------------------------------------------------
+ * 執筆モデルが降格したことを一目で分かるようにする帯。題字のすぐ下に置く。 */
+
+.notice {
+  flex: 0 0 auto;
+  margin: -12px 0 22px;
+  padding: 9px 14px;
+  background: #f2f2ef;
+  border-left: 4px solid #666666;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333333;
+}

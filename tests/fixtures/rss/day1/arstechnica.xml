@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>arstechnica</title>
+    <link>https://example.invalid/arstechnica</link>
+    <description>arstechnica feed</description>
+    <item>
+      <title>国内スタートアップの資金調達額が回復</title>
+      <link>https://example.invalid/arstechnica/1/35</link>
+      <pubDate>2026-09-01T18:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>

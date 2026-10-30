@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>cloudflare</title>
+    <link>https://example.invalid/cloudflare</link>
+    <description>cloudflare feed</description>
+    <item>
+      <title>Kubernetes 1.34 の主な変更</title>
+      <link>https://example.invalid/cloudflare/1/33</link>
+      <pubDate>2026-09-01T16:00:00+09:00</pubDate>
+      <content:encoded><![CDATA[<p>Kubernetes 1.34 の主な変更。発表の要点と背景をフィード側で全文配信している。</p>]]></content:encoded>
+    </item>
+  </channel>
+</rss>

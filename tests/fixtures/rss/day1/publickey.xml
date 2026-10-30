@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>publickey</title>
+    <link>https://example.invalid/publickey</link>
+    <description>publickey feed</description>
+    <item>
+      <title>半導体大手が製造子会社を買収</title>
+      <link>https://example.invalid/publickey/1/36</link>
+      <pubDate>2026-09-01T07:00:00+09:00</pubDate>
+    </item>
+  </channel>
+</rss>
