@@ -311,7 +311,7 @@ def stuck_text(delivery: dict, stuck: list[int], total: int) -> str:
             "受け付けられませんでした（内容が Slack の検査で止められた可能性）。残りは届いています。")
 
 
-def redeliver(run: Run, state: State, item: dict) -> list[str]:
+def redeliver(run: Run, state: State, item: dict, *, final: bool = False) -> list[str]:
     """前の実行で作ったのに送れなかった紙面を、書き直さずに送り直す。
 
     紙面は articles.yml が前の実行の成果物から `out/redeliver/<run_id>/` へ取ってくる。
@@ -340,7 +340,9 @@ def redeliver(run: Run, state: State, item: dict) -> list[str]:
             # 一部の通だけが何度送っても共有されない（内容が Slack の検査で止められる
             # など。2026-10-31、脆弱性の記事を含む1通だけが18通中で止まり続けた）。
             # 同じ通で3回止まったら、届いた分を作成済みにし、止まった通だけを知らせる
-            if stuck == delivery.get("stuck") and int(delivery.get("stuck_count") or 0) >= 2:
+            # 最後の回（このあと諦める）でも、届いた分は作成済みにする
+            if final or (stuck == delivery.get("stuck")
+                         and int(delivery.get("stuck_count") or 0) >= 2):
                 posted = report["first"]
                 slack_io.post_channel_notice(run, stuck_text(delivery, stuck, report.get("total", 0)))
             else:
@@ -426,7 +428,7 @@ def process_redo(run: Run, state: State, *, max_attempts: int | None = None,
         # 送れなかっただけの紙面は、書き直さずに送り直す（対策もその間だけ入れる）
         if item.get("deliveries"):
             with redo_doctor.applied(run.config, fixes):
-                sent = redeliver(run, state, item)
+                sent = redeliver(run, state, item, final=item["attempts"] >= limit)
             done.extend(sent)
             ids = [s for s in ids if not state.is_written(s)]
             if sent:

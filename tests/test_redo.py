@@ -179,7 +179,11 @@ def test_送れなかった紙面は書き直さずに送り直す(tmp_path, mon
     assert all(state.written[s]["permalink"] for s in listed)
 
 
-def test_同じ1通だけが3回続けて送れなければ_届いた分を作成済みにして知らせる(tmp_path, monkeypatch):
+import pytest
+
+
+@pytest.mark.parametrize("final_only", [False, True])
+def test_同じ1通だけが3回続けて送れなければ_届いた分を作成済みにして知らせる(tmp_path, monkeypatch, final_only):
     """脆弱性の記事を含む1通だけが Slack に共有されず、87件が延々やり直しに残った（2026-10-31）。"""
     import shutil
     state, result, listed = _morning(tmp_path)
@@ -201,6 +205,12 @@ def test_同じ1通だけが3回続けて送れなければ_届いた分を作�
     monkeypatch.setattr(articles_mod.slack_io, "post_completion", partly)
     monkeypatch.setattr(articles_mod.slack_io, "post_channel_notice",
                         lambda run, text: notices.append(text))
+    # 上限の回なら、3回を待たずに届いた分を作成済みにする（諦めの知らせにしない）
+    if final_only:
+        out = articles_mod.process_redo(_run(tmp_path), state, max_attempts=1)
+        assert set(out["written"]) == set(listed) and out["given_up"] == []
+        assert state.redo == []
+        return
     for _ in range(2):
         articles_mod.process_redo(_run(tmp_path), state)
         assert state.redo and not any(state.is_written(s) for s in listed)
