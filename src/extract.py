@@ -87,6 +87,24 @@ def extract_one(run: Run, article: Article,
     return article
 
 
+#: この本数以上が同じ本文なら、記事ではないページを取っている疑いがある
+SAME_BODY_LIMIT = 3
+
+
+def repeated_bodies(articles: list[Article]) -> int:
+    """同じ本文になった記事の数を返す。純粋関数。
+
+    ITmedia はトップページを記事の本文として2か月取り続けていた（2026-11-05）。
+    どの段も「成功」を返すので、本文どうしを比べないと気づけない。
+    """
+    counts: dict[str, int] = {}
+    for article in articles:
+        body = (article.body_md or "").strip()
+        if body:
+            counts[body] = counts.get(body, 0) + 1
+    return sum(n for n in counts.values() if n >= SAME_BODY_LIMIT)
+
+
 def extract_all(run: Run, articles: list[Article]) -> list[Article]:
     """並列で本文を埋める。朝のジョブを15分以内に収めるため（NFR-6）。
 
@@ -117,6 +135,11 @@ def extract_all(run: Run, articles: list[Article]) -> list[Article]:
         run.note_status(
             f"YouTube: {len(unsummarized)}件の動画は要約できませんでした"
             "（非公開・限定・配信前などで読めない動画。題名とURLだけ載せています）")
+
+    repeated = repeated_bodies(out)
+    if repeated:
+        run.note_status(f"本文取得: {repeated}件が同じ本文でした"
+                        "（記事ではないページを取っている疑いがあります）")
 
     by_stage: dict[str, int] = {}
     for article in out:

@@ -410,3 +410,12 @@ def test_文字コードを判別して読む():
     assert http.decode_text("日本語".encode("cp932")) == "日本語"
     assert http.decode_text(
         '<meta charset="euc-jp">日本語'.encode("euc_jp")).endswith("日本語")
+
+
+def test_同じ本文が3本以上あれば数える():
+    from src import extract
+    same = [make_article(url=f"https://x.invalid/{i}", body_md="トップページ") for i in range(3)]
+    other = [make_article(url="https://x.invalid/a", body_md="本文A"),
+             make_article(url="https://x.invalid/b", body_md="")]
+    assert extract.repeated_bodies(same + other) == 3
+    assert extract.repeated_bodies(same[:2] + other) == 0
