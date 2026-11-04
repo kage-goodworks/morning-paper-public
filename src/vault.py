@@ -92,6 +92,15 @@ def write_articles(run: Run, articles: list[Article],
     return result
 
 
+def write_if_missing(run: Run, rel_path: str, content: str) -> None:
+    """まだ無いときだけ書く。読めなかったときは書かない（人の変更を上書きしない）。"""
+    existing = run.guarded(lambda: run.clients.notes.read(rel_path),
+                           target="Open Vault（ノートの確認）", impact="",
+                           default="", status=None)
+    if existing is None:
+        write_note(run, rel_path, content)
+
+
 def read_article(run: Run, rel_path: str) -> Article | None:
     """保存済みの記事ノートを読んで `Article` へ戻す。
 

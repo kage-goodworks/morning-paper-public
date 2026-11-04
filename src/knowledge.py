@@ -353,8 +353,33 @@ def carry(state, entries: list[Entry]) -> None:
                                {e.story_id: e for e in entries}.values()]
 
 
-def record(run, entries: list[Entry]) -> int:
+def save(run, state, entries: list[Entry], date_str: str) -> None:
+    """持ち越し分と合わせて Vault へ積む。保存できなかった分だけを次の実行へ残す。
+
+    失敗しても呼び出し元は止めない（紙面も一覧も届いている）。取得状況に残す。
+    """
+    from . import vault
+
+    entries = carried(state) + entries
+    if not entries:
+        return
+    # 実行の間に Vault が進んでいると push が通らない（2026-11-04）。書く直前に取り直す
+    vault.refresh(run)
+    failed: list[Entry] = []
+    try:
+        added = record(run, entries, failed=failed)
+    except Exception as exc:  # noqa: BLE001 - 知識の保存で本処理を落とさない
+        run.note_status(f"知識: 保存に失敗しました（{type(exc).__name__}）")
+        carry(state, entries)
+        return
+    saved = vault.commit(run, f"auto: knowledge {date_str}") if added else True
+    carry(state, failed if saved else entries)
+
+
+def record(run, entries: list[Entry], failed: list[Entry] | None = None) -> int:
     """知識の項目を主題ノートへ足し、索引を書き直す。足した件数を返す。
+
+    書けなかった項目は `failed` へ入れる。
 
     commit は呼び出し側（`vault.commit`）でまとめて行う。失敗しても止めない
     （記事は Slack に届いている。知識は次の記事化でまた増える）。
@@ -383,7 +408,11 @@ def record(run, entries: list[Entry]) -> int:
         text = current or new_note(topic=name, category=category,
                                    label=labels.get(category, category), date_str=entry.date)
         merged, changed = add_entry(text, entry)
-        if not changed or not vault.write_note(run, rel, merged):
+        if not changed:
+            continue
+        if not vault.write_note(run, rel, merged):
+            if failed is not None:
+                failed.append(entry)
             continue
         added += 1
         topic = index.topics.get(topic_key(name)) or Topic(

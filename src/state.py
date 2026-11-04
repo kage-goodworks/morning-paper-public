@@ -63,6 +63,8 @@ class State:
     #: Slack には送れたが Vault に保存できなかった週のノート本文。次回の
     #: 週次で（Claude を呼び直さずに）保存だけやり直し、成功したら消す
     weekly_unsaved: dict[str, str] = field(default_factory=dict)
+    #: Vault へ保存できなかったデイリーノート（日付 → 本文）。次の朝に保存し直す。
+    daily_unsaved: dict[str, str] = field(default_factory=dict)
     #: 話題ごとに「どの記事まで執筆に使ったか」。続報のときは、ここに無い
     #: 記事だけを渡す。前回書いた文章を保存していなくても、新しい情報だけの
     #: 記事になる。
@@ -181,6 +183,7 @@ class State:
             "listed_messages": self.listed_messages,
             "weekly_posted": self.weekly_posted,
             "weekly_unsaved": self.weekly_unsaved,
+            "daily_unsaved": self.daily_unsaved,
             "written_articles": self.written_articles,
             "redo": self.redo,
             "knowledge_pending": self.knowledge_pending,
@@ -207,6 +210,7 @@ class State:
                              in (d.get("listed_messages") or {}).items()},
             weekly_posted=dict(d.get("weekly_posted") or {}),
             weekly_unsaved=dict(d.get("weekly_unsaved") or {}),
+            daily_unsaved=dict(d.get("daily_unsaved") or {}),
             written_articles={k: list(v) for k, v
                               in (d.get("written_articles") or {}).items()},
             redo=[dict(item) for item in (d.get("redo") or []) if isinstance(item, dict)],
@@ -224,8 +228,8 @@ SECTIONS: dict[str, tuple[str, ...]] = {
     "written": ("written", "written_articles"),
     # listed_messages は朝（投稿）と記事化（更新で通数が増えたとき）の両方が
     # 書く。両方が保存する outbox に置く。
-    "outbox": ("pending", "listed_messages", "weekly_posted", "weekly_unsaved", "redo",
-               "knowledge_pending", "usage", "usage_warned"),
+    "outbox": ("pending", "listed_messages", "weekly_posted", "weekly_unsaved",
+               "daily_unsaved", "redo", "knowledge_pending", "usage", "usage_warned"),
 }
 
 STATE_DIR = "state"

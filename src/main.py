@@ -182,13 +182,19 @@ def run_morning(run: Run, state: State) -> dict[str, Any]:
         articles_by_id=articles_by_id)
     vault.write_note(run, vault.pending_path(), pending_note)
 
-    # 前の実行で保存できなかった知識も、朝の保存に載せる
-    leftover = knowledge.carried(state)
-    if leftover:
-        knowledge.record(run, leftover)
+    # 前回保存できなかったデイリーノートも載せる（その日の分はここでしか作れない）
+    daily_left = {d: t for d, t in state.daily_unsaved.items() if d != run.date_str}
+    for date_str, text in daily_left.items():
+        vault.write_if_missing(run, vault.daily_path(date_str), text)
+
     vault_committed = vault.commit(run, f"auto: news {run.date_str}")
     if vault_committed:
-        state.knowledge_pending = []
+        state.daily_unsaved = {}
+        # 知識は人も触るノートなので、ニュースとは別の commit にする。知識で止まっても
+        # ニュースは残り、取り直した最新の上へ積める
+        knowledge.save(run, state, [], run.date_str)
+    else:
+        state.daily_unsaved = {**daily_left, run.date_str: daily}
 
     # 13. Slackへ投稿
     slack_io.flush_pending(run, state)

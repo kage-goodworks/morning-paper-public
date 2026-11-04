@@ -5,6 +5,9 @@
 - commitメッセージの先頭に `auto:` を付け、人手の変更と区別できるようにする
 - **rebase、force push、履歴の書き換えはしない**
 - pushが競合した場合は中止し、失敗した事実を通知先へ明示して次回実行へ持ち越す
+- commit の直前に最新を取り、その上に今回書いたファイルだけを置く。実行の途中で
+  Vault が進んでも、別のファイルなら止まらない。同じファイルが更新されていたら
+  上書きせず中止する
 - 書き込むのは宣言したパスだけ。範囲外は `vault.py` の関数が制限している
 
 Actions のrunnerは毎回まっさらなので、実行のたびに浅いcloneを作る。
@@ -47,6 +50,8 @@ class RealNoteStore:
         self._root: Path | None = None
         self._key_file: Path | None = None
         self._dirty = False
+        #: 今回書いたファイル。commit 直前に最新の上へ置き直すために持つ。
+        self._written: dict[str, str] = {}
 
     # -- 下回り -----------------------------------------------------------
 
@@ -110,6 +115,7 @@ class RealNoteStore:
         path = root / rel_path
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8", newline="\n")
+        self._written[rel_path.replace("\\", "/")] = content
         self._dirty = True
 
     def read(self, rel_path: str) -> str | None:
@@ -130,10 +136,37 @@ class RealNoteStore:
         self._git("fetch", "--depth", "1", "origin", BRANCH)
         self._git("reset", "--hard", "FETCH_HEAD")
 
+    def _catch_up(self, root: Path) -> None:
+        """commit の直前に最新を取り、今回書いたファイルをその上へ置き直す。
+
+        履歴は書き換えない（まだ push していない手元の変更を置き直すだけ）。
+        人や別の処理が同じファイルを更新していたら、上書きせず中止する。
+        """
+        self._git("fetch", "--depth", "1", "origin", BRANCH)
+        if self._git("rev-parse", "HEAD") == self._git("rev-parse", "FETCH_HEAD"):
+            return
+        # 日本語のファイル名を比べるので quotepath を切る
+        changed = self._git("-c", "core.quotepath=false", "diff", "--name-only",
+                            "HEAD", "FETCH_HEAD").splitlines()
+        same = sorted(set(changed) & set(self._written))
+        if same:
+            raise VaultError(
+                f"同じノートが更新されていたため中止しました（次回へ持ち越します）: {same[:3]}")
+        self._git("reset", "--hard", "FETCH_HEAD")
+        for rel_path, content in self._written.items():
+            path = root / rel_path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8", newline="\n")
+
+    def _saved(self) -> None:
+        self._dirty = False
+        self._written = {}
+
     def commit_push(self, message: str) -> None:
         if not self._dirty:
             return
         root = self._ensure_clone()
+        self._catch_up(root)
 
         if not message.startswith("auto:"):
             message = "auto: " + message
@@ -143,12 +176,12 @@ class RealNoteStore:
         present = [prefix for prefix in ALLOWED_PREFIXES
                    if (root / prefix).exists()]
         if not present:
-            self._dirty = False
+            self._saved()
             return
         self._git("add", "--", *present)
         status = self._git("status", "--porcelain")
         if not status.strip():
-            self._dirty = False
+            self._saved()
             return
 
         self._git("-c", f"user.name={COMMITTER[0]}",
@@ -164,7 +197,7 @@ class RealNoteStore:
             self._git("reset", "--soft", "HEAD~1")
             raise VaultError(
                 f"pushが競合したため中止しました（次回へ持ち越します）: {exc}") from exc
-        self._dirty = False
+        self._saved()
 
     def cleanup(self) -> None:
         if self._key_file is not None and self._key_file.exists():

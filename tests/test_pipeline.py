@@ -1234,3 +1234,81 @@ def test_週次レビューのVault保存だけ失敗した週は_次回に保�
     assert week not in state.weekly_unsaved
     assert (workspace.root / "vault" / "40_Knowledge/News-Review" / f"{week}.md").exists()
     assert len(list((workspace.root / "slack").glob("*.json"))) == slack_before   # Slack へは送らない
+
+
+# --- 朝の保存が競合したとき（2026-11-04） ---
+
+def _pending_entry(story_id: str = "s1", topic: str = "話題"):
+    from src import knowledge
+    return knowledge.Entry(story_id=story_id, date="2026-08-31", category="ai", topic=topic,
+                           headline="見出し", facts=["事実"])
+
+
+def test_持ち越しの知識はニュースと別のcommitで積まれ_保存できたら消える(workspace):
+    from src import knowledge
+    run = workspace()
+    state = State()
+    knowledge.carry(state, [_pending_entry()])
+
+    main_mod.run_morning(run, state)
+
+    assert run.clients.notes.commits == ["auto: news 2026-09-01",
+                                         "auto: knowledge 2026-09-01"]
+    assert state.knowledge_pending == []
+
+
+def test_朝の保存に失敗したらデイリーを控えて次の朝に保存し_知識も失わない(workspace):
+    from src import knowledge
+    state = State()
+    knowledge.carry(state, [_pending_entry()])
+    run = workspace()
+
+    def rejected(message):
+        raise RuntimeError("push rejected")
+
+    run.clients.notes.commit_push = rejected
+    main_mod.run_morning(run, state)
+    assert list(state.daily_unsaved) == ["2026-09-01"]
+    assert len(state.knowledge_pending) == 1
+
+    # モックは書いた時点で残るので、保存されなかった状態へ戻す
+    daily = workspace.root / "vault/50_Logs/News/2026-09-01.md"
+    daily.unlink()
+    again = State.from_dict(state.to_dict())
+    main_mod.run_morning(workspace(day=2, date_str="2026-09-02"), again)
+
+    assert daily.exists()
+    assert again.daily_unsaved == {}
+    assert again.knowledge_pending == []
+
+
+def test_控えのデイリーは既にあるノートを上書きしない(workspace):
+    state = State()
+    state.daily_unsaved = {"2026-08-31": "控えの本文\n"}
+    daily = workspace.root / "vault/50_Logs/News/2026-08-31.md"
+    daily.parent.mkdir(parents=True, exist_ok=True)
+    daily.write_text("人が直した本文\n", encoding="utf-8")
+
+    main_mod.run_morning(workspace(), state)
+
+    assert daily.read_text(encoding="utf-8") == "人が直した本文\n"
+    assert state.daily_unsaved == {}
+
+
+def test_1件だけ書けなかった知識はその1件だけ残る(workspace):
+    from src import knowledge
+    run = workspace()
+    state = State()
+    knowledge.carry(state, [_pending_entry("s1", "書ける話題"),
+                            _pending_entry("s2", "書けない話題")])
+    write = run.clients.notes.write
+
+    def refuse(rel_path, content):
+        if "書けない話題" in rel_path:
+            raise RuntimeError("disk")
+        write(rel_path, content)
+
+    run.clients.notes.write = refuse
+    knowledge.save(run, state, [], "2026-09-01")
+
+    assert [e["story_id"] for e in state.knowledge_pending] == ["s2"]
