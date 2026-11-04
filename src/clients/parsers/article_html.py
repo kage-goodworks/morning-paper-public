@@ -23,7 +23,8 @@ _READER_HEAD = re.compile(r"\A\s*Title:.{0,600}?URL Source:.{0,1500}?Markdown Co
 #: 取得先に断られたときの Jina Reader の文言と、確認ページの題名
 _REFUSED = re.compile(
     r"Warning: Target URL returned error|^Title: *(?:Page Not Found|404|403|"
-    r"Just a moment|Access Denied|Security check|Attention Required)", re.M | re.I)
+    r"Just a moment|Access Denied|Security check|Attention Required)"
+    r"|^#* *Prove your humanity", re.M | re.I)
 #: これ以上の割合で文字化けしていたら本文として使わない
 MAX_BROKEN_RATIO = 0.02
 

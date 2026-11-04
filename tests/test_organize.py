@@ -399,6 +399,7 @@ def test_エラーページと文字化けは本文にしない():
         "Warning: Target URL returned error 403: Forbidden\n\nMarkdown Content:\nNope")
     assert not article_html.usable_body("Title: x\n\nURL Source: u\n\nMarkdown Content:\n")
     assert not article_html.usable_body("\ufffd" * 10 + "abc")
+    assert not article_html.usable_body("# Prove your humanity\n\nWe are committed to safety")
     assert article_html.usable_body("Title: x\n\nURL Source: u\n\nMarkdown Content:\n本文です")
     assert article_html.strip_chrome(
         "Title: x\n\nURL Source: u\n\nMarkdown Content:\n本文です") == "本文です"
