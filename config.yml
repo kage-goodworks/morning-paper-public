@@ -53,6 +53,8 @@ categories:
 story:
   keyword_overlap: 0.5
   stopwords: [the, and, for, with, from, that, this, into, over, new, now, its, has, are, was, will]
+  # 題名にあっても話題の決め手にならない語。統合の判定で数えない
+  generic_words: [ai, it, home, itmedia, gigazine, gizmodo, title, url, source, content, markdown, image, news, ニュース, ページ, アクセス, システム, サーバー]
 
 reactions:
   x_enabled: false

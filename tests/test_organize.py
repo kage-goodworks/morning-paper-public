@@ -334,18 +334,79 @@ def test_本文の定型文だけが一致する記事は統合しない():
     assert len(stories) == 2
 
 
-def test_題名にも共通の語があれば統合する():
+def test_題名に共通の語が2つあれば統合する():
     carry = make_story(id="s_rust000", category="ai", status="carryover",
                        keywords=["Rust", "Cargo", "Tokio"])
     new = make_article(url="https://example.invalid/rust", category="ai",
-                       title="Rust release", body_md="Cargo Tokio")
+                       title="Rust Cargo release", body_md="Tokio")
 
     _, merged = organize.build_stories([new], [carry], today="2026-11-04")
 
     assert merged == 1
 
 
+def test_決め手にならない語だけの一致では統合しない():
+    carry = make_story(id="s_ai00000", category="ai", status="carryover",
+                       keywords=["AI", "ITmedia", "Home"])
+    new = make_article(url="https://example.invalid/x", category="ai",
+                       title="AI ITmedia Home", body_md="")
+
+    _, merged = organize.build_stories([new], [carry], today="2026-11-04",
+                                       generic=["ai", "itmedia", "home"])
+
+    assert merged == 0
+
+
+def test_本文のリンクだけを拾う():
+    assert article_html.markdown_links(
+        "[a](https://x.invalid/1) と [b](https://x.invalid/2) と [a](https://x.invalid/1)"
+    ) == ["https://x.invalid/1", "https://x.invalid/2"]
+    assert article_html.drop_markdown_links("見て [ここ](https://x.invalid/1) を") == "見て ここ を"
+
+
+def test_取得に使うURLはホスト名と末尾の斜線を保つ_比較の形は揃える():
+    url = "https://www.itmedia.co.jp/news/article/2611/04/2000002884/?utm_source=x"
+    article = make_article(url=url)
+    same = make_article(url="https://itmedia.co.jp/news/article/2611/04/2000002884")
+
+    kept, dropped = organize.dedupe([article, same])
+
+    assert kept[0].url == "https://www.itmedia.co.jp/news/article/2611/04/2000002884/"
+    assert dropped == 1
+
+
+def test_既存の記事IDは変わらない():
+    plain = make_article(url="https://example.invalid/a")
+    www = make_article(url="https://www.example.invalid/a/")
+
+    organize.dedupe([plain])
+    organize.dedupe([www])
+
+    assert plain.id == www.id
+
+
 def test_本文の先頭の文字サイズ設定を外す():
     assert article_html.strip_chrome(CHROME + "A child died.") == "A child died."
     assert article_html.strip_chrome("Text settings are explained here.") == (
         "Text settings are explained here.")
+
+
+def test_エラーページと文字化けは本文にしない():
+    assert not article_html.usable_body(
+        "Title: Page Not Found\n\nURL Source: https://x.invalid\n\nMarkdown Content:\nNope")
+    assert not article_html.usable_body(
+        "Title: x\n\nURL Source: https://x.invalid\n\n"
+        "Warning: Target URL returned error 403: Forbidden\n\nMarkdown Content:\nNope")
+    assert not article_html.usable_body("Title: x\n\nURL Source: u\n\nMarkdown Content:\n")
+    assert not article_html.usable_body("\ufffd" * 10 + "abc")
+    assert article_html.usable_body("Title: x\n\nURL Source: u\n\nMarkdown Content:\n本文です")
+    assert article_html.strip_chrome(
+        "Title: x\n\nURL Source: u\n\nMarkdown Content:\n本文です") == "本文です"
+
+
+def test_文字コードを判別して読む():
+    from src.clients.real import http
+    assert http.decode_text("日本語".encode("utf-8")) == "日本語"
+    assert http.decode_text("日本語".encode("cp932")) == "日本語"
+    assert http.decode_text(
+        '<meta charset="euc-jp">日本語'.encode("euc_jp")).endswith("日本語")

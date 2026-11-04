@@ -118,6 +118,7 @@ def run_morning(run: Run, state: State) -> dict[str, Any]:
         articles, carryover, today=run.date_str,
         overlap=float(config.get("story.keyword_overlap", 0.5)),
         stopwords=list(config.get("story.stopwords", []) or []),
+        generic=list(config.get("story.generic_words", []) or []),
         article_urls=state.story_urls)
     if merged:
         run.note_status(f"統合: {merged}件を既存の話題にまとめました")

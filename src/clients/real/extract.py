@@ -116,10 +116,10 @@ def _to_markdown(html: str) -> tuple[str, list[str]]:
     except ImportError:
         return article_html.to_markdown(html)
 
-    body = trafilatura.extract(html, include_links=False, include_comments=False,
-                               output_format="markdown", favor_precision=True)
-    if not body:
+    linked = trafilatura.extract(html, include_links=True, include_comments=False,
+                                 output_format="markdown", favor_precision=True)
+    if not linked:
         return article_html.to_markdown(html)
-    # リンクの抽出は自前の方が確実なので、本文だけ trafilatura を使う
-    _, links = article_html.to_markdown(html)
-    return body.strip(), links
+    # 本文の中のリンクだけを拾う。ページ全体から拾うと「人気記事」の欄まで入り、
+    # 無関係な話題へ統合される（2026-11-05）
+    return article_html.drop_markdown_links(linked).strip(), article_html.markdown_links(linked)

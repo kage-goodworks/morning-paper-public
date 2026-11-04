@@ -18,11 +18,40 @@ HEADING_TAGS = {"h1": "#", "h2": "##", "h3": "###", "h4": "####"}
 
 #: 本文の先頭に混ざる、文字サイズ設定の部品（Ars Technica）
 _TEXT_SETTINGS = re.compile(r"\A\s*Text\s+settings\b.{0,400}?Minimize to nav\s*", re.S | re.I)
+#: Jina Reader が本文の前に付ける見出し
+_READER_HEAD = re.compile(r"\A\s*Title:.{0,600}?URL Source:.{0,1500}?Markdown Content:\s*", re.S)
+#: 取得先に断られたときの Jina Reader の文言と、確認ページの題名
+_REFUSED = re.compile(
+    r"Warning: Target URL returned error|^Title: *(?:Page Not Found|404|403|"
+    r"Just a moment|Access Denied|Security check|Attention Required)", re.M | re.I)
+#: これ以上の割合で文字化けしていたら本文として使わない
+MAX_BROKEN_RATIO = 0.02
+
+
+_MD_LINK = re.compile(r"\]\((https?://[^)\s]+)")
+
+
+def markdown_links(markdown: str) -> list[str]:
+    """Markdown の中のリンクを、重複を除いて出てきた順に返す。純粋関数。"""
+    return list(dict.fromkeys(_MD_LINK.findall(markdown or "")))
+
+
+def drop_markdown_links(markdown: str) -> str:
+    """Markdown のリンクを文字だけに戻す。純粋関数。"""
+    return re.sub(r"\[([^\]]*)\]\(https?://[^)\s]*\)", r"\1", markdown or "")
 
 
 def strip_chrome(body: str) -> str:
     """本文の先頭に残ったサイトの部品を外す。純粋関数。"""
-    return _TEXT_SETTINGS.sub("", body or "", count=1)
+    return _TEXT_SETTINGS.sub("", _READER_HEAD.sub("", body or "", count=1), count=1)
+
+
+def usable_body(raw: str) -> bool:
+    """取得した文字が本文として使えるか。エラーページと文字化けは落とす。純粋関数。"""
+    if _REFUSED.search((raw or "")[:800]):
+        return False
+    text = strip_chrome(raw).strip()
+    return bool(text) and text.count("\ufffd") / len(text) <= MAX_BROKEN_RATIO
 
 
 def _is_noise(attrs: list[tuple[str, str | None]]) -> bool:

@@ -31,8 +31,12 @@ _PUNCT = re.compile(r"[　-〿！-｠!-/:-@\[-`{-~]")
 # URL とタイトルの正規化
 # --------------------------------------------------------------------------
 
-def normalize_url(url: str) -> str:
-    """追跡パラメータを外し、AMPを解決する（AC-1）。"""
+def clean_url(url: str) -> str:
+    """追跡パラメータを外し、AMPを解決する（AC-1）。取得と表示に使う形。
+
+    ホスト名と末尾の `/` は変えない。`www.` を外すと別のページになるサイトがある
+    （itmedia.co.jp はトップページを返す。2026-11-05）。
+    """
     if not url:
         return url
     parts = urlsplit(url.strip())
@@ -45,15 +49,22 @@ def normalize_url(url: str) -> str:
     path = parts.path
     path = _AMP_SUFFIX.sub("", path)
     path = _AMP_PREFIX.sub("/", path)
+    return urlunsplit((parts.scheme.lower(), parts.netloc.lower(), path,
+                       urlencode(query), ""))
+
+
+def normalize_url(url: str) -> str:
+    """同じ記事かを比べるための形。実際の取得や表示には使わない。"""
+    if not url:
+        return url
+    parts = urlsplit(clean_url(url))
+    path = parts.path
     if path.endswith("/") and len(path) > 1:
         path = path.rstrip("/")
-
-    netloc = parts.netloc.lower()
+    netloc = parts.netloc
     if netloc.startswith("www."):
         netloc = netloc[4:]
-
-    return urlunsplit((parts.scheme.lower(), netloc, path,
-                       urlencode(query), ""))
+    return urlunsplit((parts.scheme, netloc, path, parts.query, ""))
 
 
 def normalize_title(title: str) -> str:
@@ -206,9 +217,9 @@ def dedupe(articles: list[Article], *, seen: dict[str, str] | None = None,
     kept_titles: list[str] = []
 
     for article in articles:
-        article.url = normalize_url(article.url)
+        article.url = clean_url(article.url)
         article.url_hash = hashlib.sha256(
-            article.url.encode("utf-8")).hexdigest()[:16]
+            normalize_url(article.url).encode("utf-8")).hexdigest()[:16]
         article.id = article.url_hash[:8]
 
         if article.url_hash in seen_hashes or article.url_hash in seen:
@@ -332,30 +343,41 @@ def story_id(seed: str) -> str:
     return "s_" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:6]
 
 
+def _shared_title_words(article: Article, story: Story, stopwords: Iterable[str],
+                        generic: Iterable[str]) -> int:
+    """記事の題名の語のうち、話題のキーワードにもあるものの数。"""
+    skip = {w.lower() for w in generic}
+    known = {k.lower() for k in story.keywords}
+    return len({k.lower() for k in extract_keywords(article.title, "", stopwords)
+                if k.lower() not in skip} & known)
+
+
 def _matches(article: Article, story: Story, article_urls: dict[str, list[str]],
-             overlap: float, stopwords: Iterable[str]) -> bool:
-    """統合の判定。カテゴリ一致が前提条件（AC-8）。"""
+             overlap: float, stopwords: Iterable[str],
+             generic: Iterable[str] = ()) -> bool:
+    """統合の判定。カテゴリ一致が前提条件（AC-8）。
+
+    本文の語はサイトの定型文でも一致する。統合するとその記事は一覧に出なくなる
+    ので、語での統合には題名の語の一致も求める（2026-11-05）。
+    """
     if article.category != story.category:
         return False
 
+    shared = _shared_title_words(article, story, stopwords, generic)
     keywords = extract_keywords(article.title, article.body_md, stopwords)
-    # 本文の一致だけでは統合しない。サイトの定型文でも一致してしまう（2026-11-05）
-    in_title = extract_keywords(article.title, "", stopwords)
-    if jaccard(keywords, story.keywords) >= overlap and jaccard(in_title, story.keywords) > 0:
+    if shared >= 2 and jaccard(keywords, story.keywords) >= overlap:
         return True
 
     # 本文中の外部リンクが、その話題の記事URLを指している（AC-10）
     known = {normalize_url(u) for u in article_urls.get(story.id, [])}
-    for link in article.outbound_links:
-        if normalize_url(link) in known:
-            return True
-    return False
+    return any(normalize_url(link) in known for link in article.outbound_links)
 
 
 def build_stories(articles: list[Article], carryover: list[Story], *,
                   today: str, overlap: float = 0.5,
                   stopwords: Iterable[str] | None = None,
                   article_urls: dict[str, list[str]] | None = None,
+                  generic: Iterable[str] | None = None,
                   ) -> tuple[list[Story], int]:
     """新着記事を既存の話題へ統合するか、新しい話題を作る。
 
@@ -365,6 +387,7 @@ def build_stories(articles: list[Article], carryover: list[Story], *,
     戻り値は (話題のリスト, 統合が起きた件数)。
     """
     stopwords = list(stopwords or [])
+    generic = list(generic or [])
     article_urls = dict(article_urls or {})
 
     stories = [Story(**s.to_dict()) for s in carryover]
@@ -376,7 +399,7 @@ def build_stories(articles: list[Article], carryover: list[Story], *,
     for article in articles:
         target: Story | None = None
         for story in candidates:
-            if _matches(article, story, article_urls, overlap, stopwords):
+            if _matches(article, story, article_urls, overlap, stopwords, generic):
                 target = story
                 break
 
@@ -394,7 +417,8 @@ def build_stories(articles: list[Article], carryover: list[Story], *,
             continue
 
         new_story = Story(
-            id=story_id(article.url), title=article.title_short or article.title,
+            id=story_id(normalize_url(article.url)),
+            title=article.title_short or article.title,
             category=article.category, keywords=keywords,
             article_ids=[article.id], first_seen=today, last_updated=today,
             status="carryover", latest_url=article.url,

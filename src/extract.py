@@ -74,8 +74,8 @@ def extract_one(run: Run, article: Article,
             default=None,
             status="",      # 記事ごとの行は出さない。集計は extract_all が書く
             notify=False)   # 次の手段へ自動で進むので人に知らせない
-        if result is not None and result.ok and result.body_md.strip():
-            article.body_md = article_html.strip_chrome(result.body_md)
+        if result is not None and result.ok and article_html.usable_body(result.body_md):
+            article.body_md = article_html.strip_chrome(result.body_md).strip()
             article.extracted_by = result.extracted_by
             article.outbound_links = result.outbound_links
             if result.image_url and safety.is_fetchable(result.image_url):

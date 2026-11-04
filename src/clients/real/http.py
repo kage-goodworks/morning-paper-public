@@ -109,8 +109,33 @@ def fetch_bytes(url: str, *, timeout: float = DEFAULT_TIMEOUT,
     return raw
 
 
+#: ページが宣言している文字コード
+_CHARSET = re.compile(rb"""charset\s*=\s*["']?([A-Za-z0-9_-]+)""", re.I)
+_SJIS_NAMES = {"shift_jis", "shift-jis", "sjis", "x-sjis", "windows-31j", "ms932"}
+
+
+def decode_text(raw: bytes) -> str:
+    """応答の文字コードを判別して読む。純粋関数。
+
+    UTF-8 と決めて読むと、Shift_JIS のページ（ITmedia）が丸ごと化ける
+    （2026-11-05）。UTF-8 で読めなければ宣言に従い、宣言が無ければ Shift_JIS とする。
+    """
+    try:
+        return raw.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        pass
+    found = _CHARSET.search(raw[:4096])
+    name = found.group(1).decode("ascii").lower() if found else "cp932"
+    if name in _SJIS_NAMES:
+        name = "cp932"
+    try:
+        return raw.decode(name, "replace")
+    except LookupError:
+        return raw.decode("utf-8", "replace")
+
+
 def fetch_text(url: str, **kwargs: Any) -> str:
-    return fetch_bytes(url, **kwargs).decode("utf-8", "replace")
+    return decode_text(fetch_bytes(url, **kwargs))
 
 
 def fetch_json(url: str, **kwargs: Any) -> Any:
