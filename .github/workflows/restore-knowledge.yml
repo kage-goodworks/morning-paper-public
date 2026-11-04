@@ -1,0 +1,85 @@
+# 保存できなかった日の知識を、前の実行の紙面から積み直す（手動のみ。一度きりの復旧用）。
+
+name: restore-knowledge
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "紙面を残した記事化の実行 ID"
+        required: true
+      date:
+        description: "知識の日付 YYYY-MM-DD"
+        required: true
+      apply:
+        description: "state へ入れる（外すと確認だけ）"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: morning-paper-restore
+  cancel-in-progress: false
+
+env:
+  TZ: Asia/Tokyo
+  PYTHONUNBUFFERED: "1"
+  MORNING_PAPER_PUBLIC_LOG: "1"
+
+jobs:
+  restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: リポジトリの取得
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: 非公開データの取得
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: kage-goodworks/morning-paper-data
+          ssh-key: ${{ secrets.DATA_DEPLOY_KEY }}
+          path: private
+          persist-credentials: true
+
+      - name: 非公開データをつなぐ
+        run: |
+          ln -sfn private/state state
+          ln -sf private/discovered_sources.yml discovered_sources.yml
+
+      - name: Python 3.12 の用意
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: 依存の導入
+        run: |
+          python -m pip install --upgrade pip && python -m pip install -e .
+          sudo apt-get update && sudo apt-get install -y poppler-utils
+
+      - name: 紙面の取得
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_ID: ${{ inputs.run_id }}
+          PAPER_KEY: ${{ secrets.DATA_DEPLOY_KEY }}
+        run: |
+          dir="out/restore"
+          gh run download "$RUN_ID" --repo "$REPO" -n papers -D "$dir"
+          openssl enc -d -aes-256-cbc -pbkdf2 -pass env:PAPER_KEY -in "$dir/papers.tar.gz.enc" \
+            | tar xzf - -C "$dir" --strip-components=2
+
+      - name: 知識の積み直し
+        env:
+          TARGET_DATE: ${{ inputs.date }}
+          APPLY: ${{ inputs.apply && '--apply' || '' }}
+        run: python scripts/restore_knowledge.py out/restore "$TARGET_DATE" $APPLY
+
+      - name: 状態のcommit
+        if: inputs.apply
+        run: |
+          cd private && ../scripts/push_state.sh "auto: restore knowledge" state/*.json
