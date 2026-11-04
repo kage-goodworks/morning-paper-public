@@ -37,6 +37,7 @@ categories:
     gadget: ガジェット
     keyboard: キーボード
     career: 学習・キャリア
+    other: その他
   # 見出しのキーワードによる上書き。ソース既定より優先する。
   keywords:
     ai: [OpenAI, Anthropic, Claude, Gemini, GPT, LLM, 機械学習, 推論モデル, arXiv]

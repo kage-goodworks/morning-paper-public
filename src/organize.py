@@ -339,7 +339,9 @@ def _matches(article: Article, story: Story, article_urls: dict[str, list[str]],
         return False
 
     keywords = extract_keywords(article.title, article.body_md, stopwords)
-    if jaccard(keywords, story.keywords) >= overlap:
+    # 本文の一致だけでは統合しない。サイトの定型文でも一致してしまう（2026-11-05）
+    in_title = extract_keywords(article.title, "", stopwords)
+    if jaccard(keywords, story.keywords) >= overlap and jaccard(in_title, story.keywords) > 0:
         return True
 
     # 本文中の外部リンクが、その話題の記事URLを指している（AC-10）

@@ -16,6 +16,15 @@ BLOCK_TAGS = {"p", "div", "section", "li", "br", "h1", "h2", "h3", "h4", "h5", "
 HEADING_TAGS = {"h1": "#", "h2": "##", "h3": "###", "h4": "####"}
 
 
+#: 本文の先頭に混ざる、文字サイズ設定の部品（Ars Technica）
+_TEXT_SETTINGS = re.compile(r"\A\s*Text\s+settings\b.{0,400}?Minimize to nav\s*", re.S | re.I)
+
+
+def strip_chrome(body: str) -> str:
+    """本文の先頭に残ったサイトの部品を外す。純粋関数。"""
+    return _TEXT_SETTINGS.sub("", body or "", count=1)
+
+
 def _is_noise(attrs: list[tuple[str, str | None]]) -> bool:
     blob = " ".join((v or "").lower() for k, v in attrs if k in ("class", "id", "role"))
     if not blob:

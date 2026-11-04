@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from src import organize
+from src.clients.parsers import article_html
 from tests.conftest import make_article, make_story
 
 ORDER = ["ai", "lang", "devtools", "infra", "industry", "security",
@@ -312,3 +313,39 @@ def test_個人投稿はカテゴリごとに1つの写真集にまとまり_新
     assert s.article_ids == ["p7", "p6", "p5", "p4", "p3", "p2"]     # 新しい順に6件
     assert s.latest_url == "https://example.invalid/a" and len(chosen) == 6
     assert organize.build_galleries([], today="2026-09-17", labels={}) == ([], [])
+
+
+# --- サイトの定型文での誤統合（2026-11-05） ---
+
+CHROME = ("Text\n settings\n\nStory text\n\nSize Small Standard Large Width * Standard Wide "
+          "Links Standard Orange\n\n* Subscribers only\n\nLearn more Minimize to nav\n\n")
+
+
+def test_本文の定型文だけが一致する記事は統合しない():
+    keywords = organize.extract_keywords("UEFI flaw enables code execution", CHROME)
+    carry = make_story(id="s_uefi000", category="industry", status="carryover",
+                       keywords=keywords)
+    new = make_article(url="https://example.invalid/measles", category="industry",
+                       title="Another child dies of measles", body_md=CHROME)
+
+    stories, merged = organize.build_stories([new], [carry], today="2026-11-04")
+
+    assert merged == 0
+    assert len(stories) == 2
+
+
+def test_題名にも共通の語があれば統合する():
+    carry = make_story(id="s_rust000", category="ai", status="carryover",
+                       keywords=["Rust", "Cargo", "Tokio"])
+    new = make_article(url="https://example.invalid/rust", category="ai",
+                       title="Rust release", body_md="Cargo Tokio")
+
+    _, merged = organize.build_stories([new], [carry], today="2026-11-04")
+
+    assert merged == 1
+
+
+def test_本文の先頭の文字サイズ設定を外す():
+    assert article_html.strip_chrome(CHROME + "A child died.") == "A child died."
+    assert article_html.strip_chrome("Text settings are explained here.") == (
+        "Text settings are explained here.")

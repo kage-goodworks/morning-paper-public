@@ -14,6 +14,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 from . import safety
+from .clients.parsers import article_html
 from .models import Article, ExtractResult
 from .pipeline import Run
 
@@ -74,7 +75,7 @@ def extract_one(run: Run, article: Article,
             status="",      # 記事ごとの行は出さない。集計は extract_all が書く
             notify=False)   # 次の手段へ自動で進むので人に知らせない
         if result is not None and result.ok and result.body_md.strip():
-            article.body_md = result.body_md
+            article.body_md = article_html.strip_chrome(result.body_md)
             article.extracted_by = result.extracted_by
             article.outbound_links = result.outbound_links
             if result.image_url and safety.is_fetchable(result.image_url):
