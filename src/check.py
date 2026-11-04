@@ -68,6 +68,19 @@ HOW_TO_FIX = {
 }
 
 
+#: 鍵は正しく、利用上限に当たっただけのとき。鍵を作り直しても直らない
+LIMIT_WORDS = ("hit your", "usage limit", "weekly limit", "rate limit", "quota")
+LIMIT_FIX = "鍵は正常です。利用上限に当たっただけなので、操作は不要です（解除まで Gemini が代わりに書きます）"
+
+
+def how_to_fix(result: Result) -> str:
+    """失敗の中身に合う直し方。純粋関数。"""
+    detail = str(result.detail).lower()
+    if any(word in detail for word in LIMIT_WORDS):
+        return LIMIT_FIX
+    return HOW_TO_FIX.get(result.name, "")
+
+
 def notice_for(results: list[Result]) -> str:
     """点検で動かない大事な部品があったときの知らせ。無ければ空。純粋関数。"""
     bad = [r for r in results if r.status == NG and r.name in CRITICAL]
@@ -76,8 +89,8 @@ def notice_for(results: list[Result]) -> str:
     lines = [":stethoscope: 週1回の点検で、動かない部品が見つかりました。朝の処理や記事化が止まる前に直してください。"]
     for r in bad:
         lines.append(f"• {r.name}: {r.detail[:120]}")
-        if r.name in HOW_TO_FIX:
-            lines.append(f"  直し方: {HOW_TO_FIX[r.name]}")
+        if how_to_fix(r):
+            lines.append(f"  直し方: {how_to_fix(r)}")
     return "\n".join(lines)
 
 

@@ -105,6 +105,13 @@ def read_article(run: Run, rel_path: str) -> Article | None:
     return note.parse_article(text) if text else None
 
 
+def refresh(run: Run) -> None:
+    """手元の写しを最新にする。失敗しても続ける（push で止まれば持ち越す）。"""
+    run.guarded(lambda: run.clients.notes.refresh(),
+                target="Open Vault（最新の取り直し）", impact="", default=None,
+                status="", notify=False)
+
+
 def commit(run: Run, message: str) -> bool:
     """まとめてcommitしpushする。競合しても処理は止めない。"""
     ok = run.guarded(

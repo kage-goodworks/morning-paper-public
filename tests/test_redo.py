@@ -314,3 +314,35 @@ def test_本人の像は非公開データのファイルから読む(tmp_path):
     assert reader_profile(cfg) == ""
     (tmp_path / "private" / "profile.md").write_text("個人開発者。\n", encoding="utf-8")
     assert reader_profile(cfg) == "個人開発者。"
+
+
+def test_Vaultへ保存できなかった知識は次の実行へ残し_保存できたら消す(tmp_path):
+    """runner は毎回消える。state に残さないと「持ち越し」にならない（2026-11-04 に77件）。"""
+    from src import knowledge
+
+    state = State()
+    run = _run(tmp_path)
+    entry = knowledge.Entry(story_id="s1", date="2026-11-04", category="ai", topic="話題",
+                            headline="見出し", facts=["事実"])
+    commits = iter([RuntimeError("push rejected")] * 3 + [None])
+
+    def push(message):
+        result = next(commits)
+        if result:
+            raise result
+
+    run.clients.notes.commit_push = push
+    knowledge.carry(state, [entry])
+    articles_mod._save_knowledge(run, state, [], "2026-11-04")
+    assert [e["story_id"] for e in state.knowledge_pending] == ["s1"]   # 失敗。残る
+
+    again = State.from_dict(state.to_dict())                             # 次の実行
+    assert knowledge.carried(again)[0].facts == ["事実"]
+    articles_mod._save_knowledge(_run(tmp_path), again, [], "2026-11-05")
+    assert again.knowledge_pending == []                                 # 保存できた
+
+
+def test_点検は利用上限のとき鍵の作り直しを勧めない():
+    from src.check import NG, Result, notice_for
+    text = notice_for([Result("Claude（執筆）", NG, "You've hit your weekly limit")])
+    assert "setup-token" not in text and "操作は不要" in text

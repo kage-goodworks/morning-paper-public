@@ -119,6 +119,17 @@ class RealNoteStore:
             return None
         return path.read_text(encoding="utf-8")
 
+    def refresh(self) -> None:
+        """手元の写しを origin の最新へ合わせる。
+
+        未保存の変更があるときは何もしない。消えるのは使い捨ての写しだけで、
+        リポジトリの履歴は書き換えない。
+        """
+        if self._root is None or self._dirty:
+            return
+        self._git("fetch", "--depth", "1", "origin", BRANCH)
+        self._git("reset", "--hard", "FETCH_HEAD")
+
     def commit_push(self, message: str) -> None:
         if not self._dirty:
             return

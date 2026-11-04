@@ -27,7 +27,7 @@ from __future__ import annotations
 import hashlib
 import re
 import unicodedata
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import date, timedelta
 
 from . import safety
@@ -338,6 +338,19 @@ def load_index(run) -> Index:
                        target="Open Vault（知識の索引の読み出し）", impact="",
                        default=None, status="")
     return parse_index(text or "", base=base)
+
+
+def carried(state) -> list[Entry]:
+    """前の実行で Vault へ保存できなかった項目を戻す。"""
+    names = set(Entry.__dataclass_fields__)
+    return [Entry(**{k: v for k, v in item.items() if k in names})
+            for item in state.knowledge_pending]
+
+
+def carry(state, entries: list[Entry]) -> None:
+    """保存できなかった項目を次の実行へ残す。同じ話題は1つにまとめる。"""
+    state.knowledge_pending = [asdict(e) for e in
+                               {e.story_id: e for e in entries}.values()]
 
 
 def record(run, entries: list[Entry]) -> int:

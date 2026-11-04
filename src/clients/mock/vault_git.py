@@ -32,6 +32,9 @@ class MockNoteStore:
             return None
         return path.read_text(encoding="utf-8")
 
+    def refresh(self) -> None:
+        return None
+
     def commit_push(self, message: str) -> None:
         # 自動化のcommitは先頭へ auto: を付ける（AI_GUIDE 自動化節）
         if not message.startswith("auto:"):

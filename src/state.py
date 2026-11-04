@@ -71,6 +71,9 @@ class State:
     #: AI が応答しなかった・時間切れ・途中で止まった話題を、本人が押し直さなくても
     #: 後の実行で作り直して送る。{date, story_ids, attempts, reason, since}
     redo: list[dict] = field(default_factory=list)
+    #: Vault へ push できなかった知識の項目。runner は毎回消えるので、ここに残さないと
+    #: 「持ち越し」にならず失われる（2026-11-04 に77件）。次の実行で積み直し、保存できたら消す
+    knowledge_pending: list[dict] = field(default_factory=list)
     #: GitHub Actions の利用時間の見積り（分）。月ごと。無料枠を使い切ると朝の処理
     #: すら動かなくなるため、近づいたら重い処理（作り直し）を控える（2026-10-30）
     usage: dict[str, float] = field(default_factory=dict)
@@ -180,6 +183,7 @@ class State:
             "weekly_unsaved": self.weekly_unsaved,
             "written_articles": self.written_articles,
             "redo": self.redo,
+            "knowledge_pending": self.knowledge_pending,
             "usage": self.usage,
             "usage_warned": self.usage_warned,
         }
@@ -206,6 +210,8 @@ class State:
             written_articles={k: list(v) for k, v
                               in (d.get("written_articles") or {}).items()},
             redo=[dict(item) for item in (d.get("redo") or []) if isinstance(item, dict)],
+            knowledge_pending=[dict(item) for item in (d.get("knowledge_pending") or [])
+                               if isinstance(item, dict)],
             usage={str(k): float(v) for k, v in (d.get("usage") or {}).items()},
             usage_warned=dict(d.get("usage_warned") or {}),
         )
@@ -219,7 +225,7 @@ SECTIONS: dict[str, tuple[str, ...]] = {
     # listed_messages は朝（投稿）と記事化（更新で通数が増えたとき）の両方が
     # 書く。両方が保存する outbox に置く。
     "outbox": ("pending", "listed_messages", "weekly_posted", "weekly_unsaved", "redo",
-               "usage", "usage_warned"),
+               "knowledge_pending", "usage", "usage_warned"),
 }
 
 STATE_DIR = "state"

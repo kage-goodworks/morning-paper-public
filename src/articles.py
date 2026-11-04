@@ -666,16 +666,19 @@ def _save_knowledge(run: Run, state: State, records: list[write.WriteResult],
         story_id=r.story_id, title=r.title, category=r.category, body_md=r.body_md,
         sources=r.sources, notes=list(state.story_notes.get(r.story_id, [])),
         date_str=list_date) for r in records]
-    entries = [e for e in entries if e.facts]
+    entries = knowledge.carried(state) + [e for e in entries if e.facts]
     if not entries:
         return
+    # 記事化の間に Vault が進んでいると push が通らない（2026-11-04）。書く直前に取り直す
+    vault.refresh(run)
     try:
         added = knowledge.record(run, entries)
     except Exception as exc:  # noqa: BLE001 - 知識の保存で記事化を落とさない
         run.note_status(f"知識: 保存に失敗しました（{type(exc).__name__}）")
+        knowledge.carry(state, entries)
         return
-    if added:
-        vault.commit(run, f"auto: knowledge {list_date}")
+    saved = vault.commit(run, f"auto: knowledge {list_date}") if added else True
+    knowledge.carry(state, [] if saved else entries)
 
 
 def restore_after_abort(run: Run, state: State, *, story_ids: list[str],

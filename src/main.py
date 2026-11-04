@@ -12,7 +12,7 @@ from __future__ import annotations
 from time import sleep as real_sleep
 from typing import Any
 
-from . import blocks, collect, discover, extract, note, organize, reactions
+from . import blocks, collect, discover, extract, knowledge, note, organize, reactions
 from . import slack as slack_io
 from . import vault
 from .pipeline import Run
@@ -182,7 +182,13 @@ def run_morning(run: Run, state: State) -> dict[str, Any]:
         articles_by_id=articles_by_id)
     vault.write_note(run, vault.pending_path(), pending_note)
 
+    # 前の実行で保存できなかった知識も、朝の保存に載せる
+    leftover = knowledge.carried(state)
+    if leftover:
+        knowledge.record(run, leftover)
     vault_committed = vault.commit(run, f"auto: news {run.date_str}")
+    if vault_committed:
+        state.knowledge_pending = []
 
     # 13. Slackへ投稿
     slack_io.flush_pending(run, state)
