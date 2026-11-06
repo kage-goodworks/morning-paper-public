@@ -188,6 +188,8 @@ class RealGemini:
         self.model = model
         #: 本命が 404（引退）や 503（混雑）のとき順に試す候補
         self.fallbacks = list(fallbacks or [])
+        #: 直近に応答したモデル。取得状況に残し、品質の差を追えるようにする
+        self.last_model = ""
 
     def complete(self, prompt: str, purpose: str) -> str:
         """本命 → 候補の順に試す。全部だめなら最後の例外を投げる。
@@ -198,7 +200,9 @@ class RealGemini:
         tried: list[str] = []
         for model in [self.model, *self.fallbacks]:
             try:
-                return self._complete_with(model, prompt, purpose)
+                text = self._complete_with(model, prompt, purpose)
+                self.last_model = model
+                return text
             except http.FetchError as exc:
                 tried.append(f"{model}: {str(exc)[:120]}")
                 if not any(code in str(exc) for code in ("HTTP 404", "HTTP 503",

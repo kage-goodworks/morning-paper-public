@@ -20,6 +20,14 @@ HEADING_TAGS = {"h1": "#", "h2": "##", "h3": "###", "h4": "####"}
 _TEXT_SETTINGS = re.compile(r"\A\s*Text\s+settings\b.{0,400}?Minimize to nav\s*", re.S | re.I)
 #: Jina Reader が本文の前に付ける見出し
 _READER_HEAD = re.compile(r"\A\s*Title:.{0,600}?URL Source:.{0,1500}?Markdown Content:\s*", re.S)
+#: 本文の後ろに続くサイトの部品（The Verge の案内と人気記事、NHK の地域欄）
+_TAIL_CHROME = re.compile(
+    r"\n+(?:\*\*Follow topics and authors\*\*|#+ *Top Stories\b|#+ *各地のニュース"
+    r"|#+ *関連記事|#+ *この記事の著者|SpecialPR\n).*\Z", re.S)
+#: ITmedia の「1/3 ページ」
+_PAGE_COUNT = re.compile(r"(\d+)/(\d+) ?ページ")
+#: 続きを取りに行くページ数の上限（1ページ目を含む）
+MAX_PAGES = 5
 #: 取得先に断られたときの Jina Reader の文言と、確認ページの題名
 _REFUSED = re.compile(
     r"Warning: Target URL returned error|^Title: *(?:Page Not Found|404|403|"
@@ -43,8 +51,22 @@ def drop_markdown_links(markdown: str) -> str:
 
 
 def strip_chrome(body: str) -> str:
-    """本文の先頭に残ったサイトの部品を外す。純粋関数。"""
-    return _TEXT_SETTINGS.sub("", _READER_HEAD.sub("", body or "", count=1), count=1)
+    """本文の前後に残ったサイトの部品を外す。純粋関数。"""
+    text = _TEXT_SETTINGS.sub("", _READER_HEAD.sub("", body or "", count=1), count=1)
+    return _TAIL_CHROME.sub("", text, count=1)
+
+
+def next_page_urls(html: str, url: str) -> list[str]:
+    """複数ページの記事の、2ページ目以降のURLを返す。純粋関数。
+
+    ページの中に2ページ目へのリンクがあるときだけ返す。「1/2 ページ」という
+    文字だけでは、別の用途の表示と区別できないため。
+    """
+    match = _PAGE_COUNT.search(html or "")
+    base = (url or "").rstrip("/")
+    if not match or match.group(1) != "1" or f"{base}/2" not in html:
+        return []
+    return [f"{base}/{n}" for n in range(2, min(int(match.group(2)), MAX_PAGES) + 1)]
 
 
 def usable_body(raw: str) -> bool:

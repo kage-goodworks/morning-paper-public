@@ -9,6 +9,7 @@
 
 from __future__ import annotations
 
+from time import monotonic
 from time import sleep as real_sleep
 from typing import Any
 
@@ -85,7 +86,9 @@ def run_morning(run: Run, state: State) -> dict[str, Any]:
     articles = [a for a in articles if a.kind != "gallery"]
 
     # 5. 本文取得（4段のフォールバック）
+    started = monotonic()
     articles = extract.extract_all(run, articles)
+    extract_seconds = monotonic() - started
 
     # 6. カテゴリの上書き
     keyword_map = dict(config.get("categories.keywords", {}) or {})
@@ -93,7 +96,10 @@ def run_morning(run: Run, state: State) -> dict[str, Any]:
         article.category = organize.categorize(article, keyword_map)
 
     # 7. タイトルの翻訳（AC-25）
+    started = monotonic()
     articles = extract.translate_titles(run, articles)
+    run.note_status(f"所要時間: 本文取得 {extract_seconds:.0f}秒 / "
+                    f"見出し {monotonic() - started:.0f}秒")
 
     # 8. 反応（無料 → X）
     articles = reactions.fetch_free(run, articles)

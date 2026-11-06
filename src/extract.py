@@ -172,24 +172,35 @@ def translate_titles(run: Run, articles: list[Article]) -> list[Article]:
     if not targets:
         return articles
 
-    english = sum(1 for a in targets if _looks_english(a.title))
+    # 英語だけの組に分ける。日本語の見出しと混ぜると「そのまま写す」指示に
+    # 引きずられ、英語も写して返す日があった（2026-11-05 は61件すべて）
+    foreign = [a for a in targets if _looks_english(a.title)]
+    native = [a for a in targets if not _looks_english(a.title)]
+    batches = [(group[start:start + HEADLINE_BATCH], group is foreign)
+               for group in (foreign, native)
+               for start in range(0, len(group), HEADLINE_BATCH)]
+
+    english = len(foreign)
     translated = 0
     shortened = 0
-    for start in range(0, len(targets), HEADLINE_BATCH):
-        chunk = targets[start:start + HEADLINE_BATCH]
-        prompt = build_translate_prompt([a.title for a in chunk])
+    models: list[str] = []
+    for chunk, english_only in batches:
+        prompt = build_translate_prompt([a.title for a in chunk], english_only=english_only)
         result = run.guarded(
             lambda prompt=prompt: run.clients.llms["gemini"].complete(prompt, "translate"),
             target="Gemini（見出しの翻訳と短縮）",
             impact="英語のタイトルが原題のまま、見出しも短くならずに出ます",
             default="")
+        model = getattr(run.clients.llms["gemini"], "last_model", "")
+        if result and model and model not in models:
+            models.append(model)
         parsed = parse_headlines(result or "", len(chunk))
         for index, article in enumerate(chunk, start=1):
             pair = parsed.get(index)
             if pair is None:
                 continue
             full, short = pair
-            if full and _looks_english(article.title) and full != article.title:
+            if full and _looks_english(article.title) and not _looks_english(full):
                 article.title_original = article.title
                 article.title = full
                 translated += 1
@@ -203,6 +214,8 @@ def translate_titles(run: Run, articles: list[Article]) -> list[Article]:
     line = f"見出し: {shortened}件を短くしました"
     if english:
         line += f"（英語{english}件のうち{translated}件を日本語に）"
+    if models:
+        line += f" / 応答モデル: {', '.join(models)}"
     run.note_status(line)
     return articles
 
@@ -211,7 +224,7 @@ def translate_titles(run: Run, articles: list[Article]) -> list[Article]:
 HEADLINE_SEP = "||"
 
 
-def build_translate_prompt(titles: list[str]) -> str:
+def build_translate_prompt(titles: list[str], *, english_only: bool = False) -> str:
     """翻訳と短縮の指示文。純粋関数。
 
     番号付きで渡し、番号付きで返させる。LLM は前置きや空行を足すことが
@@ -223,6 +236,8 @@ def build_translate_prompt(titles: list[str]) -> str:
     分けない（LLM を使う箇所を増やさない）。
     """
     numbered = "\n".join(f"{i}. TITLE: {t}" for i, t in enumerate(titles, start=1))
+    strict = ("入力はすべて英語の見出しです。訳文は必ず日本語で書き、"
+              "英語のまま写さないでください。\n" if english_only else "")
     return (
         "次のニュース見出しそれぞれについて、2つを書いてください。\n"
         "A. 訳文: 英語の見出しは自然な日本語の見出しに翻訳する。固有名詞・製品名・"
@@ -233,8 +248,8 @@ def build_translate_prompt(titles: list[str]) -> str:
         "媒体名・「〜について」「〜を発表」のような定型は省き、「大まかに言うとこれ」が"
         "一目で分かるようにする。意味は変えない。英語の見出しも日本語で書く。\n"
         f"出力は「番号. 訳文 {HEADLINE_SEP} 短縮見出し」を1行に1件、入力と同じ番号で、"
-        "同じ件数だけ。前置き・説明・空行・TITLE: の文字は付けないでください。\n\n"
-        + numbered
+        "同じ件数だけ。前置き・説明・空行・TITLE: の文字は付けないでください。\n"
+        + strict + "\n" + numbered
     )
 
 

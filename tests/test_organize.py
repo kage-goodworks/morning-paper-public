@@ -109,7 +109,7 @@ def test_ac9_written_の話題とも統合しない():
 
 def test_ac10_本文中のリンクが既存記事を指すとキーワード無関係に統合される():
     carry = make_story(keywords=["Rust", "Cargo"], article_ids=["a1"])
-    new = make_article(id="a2", url="https://example.invalid/other",
+    new = make_article(id="a2", url="https://other.invalid/news",
                        title="まったく違う見出し", category="ai",
                        outbound_links=["https://example.invalid/original"])
 
@@ -420,3 +420,82 @@ def test_同じ本文が3本以上あれば数える():
              make_article(url="https://x.invalid/b", body_md="")]
     assert extract.repeated_bodies(same + other) == 3
     assert extract.repeated_bodies(same[:2] + other) == 0
+
+
+def test_同じサイトへのリンクでは統合しない():
+    carry = make_story(keywords=["Rust", "Cargo"], article_ids=["a1"])
+    new = make_article(id="a2", url="https://www.example.invalid/other",
+                       title="まったく違う見出し", category="ai",
+                       outbound_links=["https://example.invalid/original"])
+
+    _, merged = organize.build_stories(
+        [new], [carry], today="2026-09-02",
+        article_urls={"s_000001": ["https://example.invalid/original"]})
+
+    assert merged == 0
+
+
+def test_本文の後ろのサイト部品を外す():
+    from src.clients.parsers import article_html
+    verge = "本文\n\n**Follow topics and authors**from this story to see more"
+    popular = "本文\n\n#### Top Stories\n\n3:02 PM UTC\n\n別の記事"
+    nhk = "本文…\n\n#### 各地のニュース\n\n#### 各地のニュース\n\n地図から選ぶ"
+    assert [article_html.strip_chrome(b) for b in (verge, popular, nhk)] == ["本文", "本文", "本文…"]
+    assert article_html.strip_chrome("本文の中の各地のニュースの話") == "本文の中の各地のニュースの話"
+
+
+def test_続きのページのURLを返す():
+    from src.clients.parsers import article_html
+    url = "https://www.itmedia.co.jp/news/article/2611/05/1/"
+    page = '1/3 ページ <a href="https://www.itmedia.co.jp/news/article/2611/05/1/2">次</a>'
+    assert article_html.next_page_urls(page, url) == [url + "2", url + "3"]
+    assert article_html.next_page_urls("1/3 ページ", url) == []
+    assert article_html.next_page_urls(page.replace("1/3", "2/3"), url) == []
+    assert len(article_html.next_page_urls(page.replace("1/3", "1/40"), url)) == article_html.MAX_PAGES - 1
+
+
+def test_分かれた本文の枠を1つにまとめる():
+    from lxml import etree
+    from src.clients.real import extract as real
+    page = ('<html><body><div class="post-content a"><p>前半</p></div><div class="ad"></div>'
+            '<div class="post-content"><p>後半</p></div></body></html>')
+    joined = etree.tostring(real._join_split_body(page), encoding="unicode")
+    assert joined.count("post-content") == 1
+    single = '<html><body><div class="post-content"><p>本文</p></div></body></html>'
+    assert real._join_split_body(single) == single
+
+
+def test_英語の見出しは日本語と別の組にして写しは訳文にしない(tmp_path):
+    from src import extract
+    from src.clients.factory import build_mock
+    from src.config import load as load_config
+    from src.pipeline import Run
+    from src.retry import NO_SLEEP
+
+    prompts = []
+
+    class Copying:
+        name = "gemini"
+        last_model = "gemini-test"
+
+        def complete(self, prompt, purpose):
+            prompts.append(prompt)
+            if "すべて英語" in prompt:
+                return "1. Rust released || Rust公開\n2. Go 訳された || Go公開"
+            return "1. 日本語の見出し || 見出し"
+
+    clients = build_mock(scenario="normal", day=1, out_dir=tmp_path)
+    clients.llms["gemini"] = Copying()
+    run = Run(config=load_config(), clients=clients, date_str="2026-09-01",
+              out_dir=tmp_path, data_dir=tmp_path, sleep=NO_SLEEP)
+    copied = make_article(id="e1", url="https://e.test/1", title="Rust released")
+    native = make_article(id="j1", url="https://e.test/2", title="日本語の見出し")
+    done = make_article(id="e2", url="https://e.test/3", title="Go released")
+
+    extract.translate_titles(run, [copied, native, done])
+
+    assert len(prompts) == 2 and "日本語の見出し" not in prompts[0].split("TITLE:", 1)[1]
+    assert copied.title == "Rust released" and copied.title_original is None
+    assert copied.title_short == "Rust公開"
+    assert done.title == "Go 訳された"
+    assert any("英語2件のうち1件を日本語に" in s and "gemini-test" in s for s in run.status)

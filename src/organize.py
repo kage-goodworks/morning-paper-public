@@ -343,6 +343,10 @@ def story_id(seed: str) -> str:
     return "s_" + hashlib.sha256(seed.encode("utf-8")).hexdigest()[:6]
 
 
+def _host(url: str) -> str:
+    return urlsplit(normalize_url(url)).netloc.lower()
+
+
 def _shared_title_words(article: Article, story: Story, stopwords: Iterable[str],
                         generic: Iterable[str]) -> int:
     """記事の題名の語のうち、話題のキーワードにもあるものの数。"""
@@ -368,9 +372,13 @@ def _matches(article: Article, story: Story, article_urls: dict[str, list[str]],
     if shared >= 2 and jaccard(keywords, story.keywords) >= overlap:
         return True
 
-    # 本文中の外部リンクが、その話題の記事URLを指している（AC-10）
+    # 本文中の外部リンクが、その話題の記事URLを指している（AC-10）。
+    # 同じサイトへのリンクは外部リンクではない。人物紹介や関連記事の案内にも
+    # 使われるので、無関係な話題へ統合される（2026-11-06）
     known = {normalize_url(u) for u in article_urls.get(story.id, [])}
-    return any(normalize_url(link) in known for link in article.outbound_links)
+    host = _host(article.url)
+    return any(normalize_url(link) in known for link in article.outbound_links
+               if _host(link) != host)
 
 
 def build_stories(articles: list[Article], carryover: list[Story], *,

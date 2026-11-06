@@ -16,6 +16,10 @@ from . import http
 
 JINA_ENDPOINT = "https://r.jina.ai/{url}"
 FIRECRAWL_ENDPOINT = "https://api.firecrawl.dev/v1/scrape"
+#: 本文を広告で区切って複数並べるサイト（Ars Technica）の本文の枠
+_SPLIT_BODY = ("//div[contains(concat(' ', normalize-space(@class), ' '), ' post-content ')]"
+               "[not(ancestor::div[contains(concat(' ', normalize-space(@class), ' '),"
+               " ' post-content ')])]")
 
 
 class RealRssFulltext:
@@ -50,6 +54,15 @@ class RealTrafilatura:
         body, links = _to_markdown(html)
         if not body:
             return ExtractResult(ok=False)
+        # 続きのページは取れた分だけ足す。失敗しても1ページ目は本文として使える
+        for page in article_html.next_page_urls(html, article.url):
+            try:
+                more, more_links = _to_markdown(http.fetch_text(page, timeout=20.0))
+            except Exception:  # noqa: BLE001
+                break
+            if more:
+                body = f"{body}\n\n{more}"
+                links = [*links, *more_links]
         return ExtractResult(ok=True, body_md=body, extracted_by=self.name,
                              outbound_links=links,
                              image_url=article_html.representative_image(html))
@@ -109,6 +122,27 @@ class RealFirecrawl:
                              outbound_links=links[:50])
 
 
+def _join_split_body(html: str):
+    """本文の枠が複数あれば1つにまとめる。
+
+    trafilatura は最初の枠しか読まないので、Ars の本文が4分の1になっていた
+    （2026-11-06）。枠が1つ以下なら元の文字列をそのまま返す。
+    """
+    from lxml import html as lxml_html
+
+    try:
+        tree = lxml_html.fromstring(html)
+    except (ValueError, TypeError, SyntaxError):
+        return html
+    blocks = tree.xpath(_SPLIT_BODY)
+    if len(blocks) < 2:
+        return html
+    for block in blocks[1:]:
+        blocks[0].extend(list(block))
+        block.getparent().remove(block)
+    return tree
+
+
 def _to_markdown(html: str) -> tuple[str, list[str]]:
     """HTMLから本文を抜く。`trafilatura` があれば使う。"""
     try:
@@ -116,8 +150,9 @@ def _to_markdown(html: str) -> tuple[str, list[str]]:
     except ImportError:
         return article_html.to_markdown(html)
 
-    linked = trafilatura.extract(html, include_links=True, include_comments=False,
-                                 output_format="markdown", favor_precision=True)
+    linked = trafilatura.extract(_join_split_body(html), include_links=True,
+                                 include_comments=False, output_format="markdown",
+                                 favor_precision=True)
     if not linked:
         return article_html.to_markdown(html)
     # 本文の中のリンクだけを拾う。ページ全体から拾うと「人気記事」の欄まで入り、
